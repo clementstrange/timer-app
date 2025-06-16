@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Request
 
 app = FastAPI(title="Timer App API")
 
@@ -12,6 +13,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def root():
-    return {"status": "ok", "message": "Timer App API is running"}
+print("FastAPI server starting with POST /task endpoint")
+
+
+@app.post("/task")
+async def root(request: Request):
+    body = await request.json()
+    inputValue = body.get("task")
+    print(f"Received task: {inputValue}")  # This will show in your server terminal
+
+    return {"task": inputValue}
+

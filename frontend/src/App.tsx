@@ -41,19 +41,28 @@ function App() {
  
   function submit() {
     setTask(inputValue)
+    
+    fetch("http://127.0.0.1:8000/task", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ task: inputValue })
+    });
   }
   
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-    <h1>{task}</h1>
-    <input placeholder = "Enter task" value = {inputValue} onChange={(e)=>setInputValue(e.target.value)}></input>
-    <p></p>
-    <button onClick={submit}>Submit task</button>
-    <h1>{count}</h1>
-    <button onClick={start}>Start</button>
-    <button onClick={pause}>Pause</button>
-    <button onClick={reset}>Reset</button>
-    
+      <h1>{task}</h1>
+      <input placeholder="Enter task" value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+      <p></p>
+      <button onClick={submit}>Submit task</button>
+      <h1>{count}</h1>
+      <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+        <button onClick={start}>Start</button>
+        <button onClick={pause}>Pause</button>
+        <button onClick={reset}>Reset</button>
+      </div>
     </div>
   );
 }
