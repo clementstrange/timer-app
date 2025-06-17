@@ -1,7 +1,28 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Request
+from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime
+import sqlite3
 
+# Database setup
+SQLALCHEMY_DATABASE_URL = "sqlite:///./timer_app.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# Database model
+class WorkSession(Base):
+    __tablename__ = "work_sessions"
+    
+    task_id = Column(Integer, primary_key=True, index=True)
+    task_name = Column(String, index=True)
+    time_worked = Column(Integer)
+    time_saved = Column(DateTime, default=datetime.utcnow)
+
+# Create tables
+Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Timer App API")
 
 # Configure CORS
@@ -17,10 +38,32 @@ print("FastAPI server starting with POST /task endpoint")
 
 
 @app.post("/task")
-async def root(request: Request):
+async def save_task(request: Request):
     body = await request.json()
-    inputValue = body.get("task")
-    print(f"Received task: {inputValue}")  # This will show in your server terminal
+    task_name = body.get("task")
+    time_worked = body.get("time")
+    
+    # Save to database
+    db = SessionLocal()
+    work_session = WorkSession(task_name=task_name, time_worked=time_worked)
+    db.add(work_session)
+    db.commit()
+    db.close()
+    
+    print(f"Saved to DB: {task_name}, Time worked: {time_worked}")
+    return {"task": task_name}
 
-    return {"task": inputValue}
-
+@app.get("/latest-session")
+async def get_latest_session():
+    db = SessionLocal()
+    latest_session = db.query(WorkSession).order_by(WorkSession.task_id.desc()).first()
+    db.close()
+    
+    if latest_session:
+        return {
+            "task_name": latest_session.task_name,
+            "time_worked": latest_session.time_worked,
+            "time_saved": latest_session.time_saved
+        }
+    else:
+        return {"task_name": None, "time_worked": 0}
