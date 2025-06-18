@@ -56,14 +56,17 @@ async def save_task(request: Request):
 @app.get("/latest-session")
 async def get_latest_session():
     db = SessionLocal()
-    latest_session = db.query(WorkSession).order_by(WorkSession.task_id.desc()).first()
+    latest_session = db.query(WorkSession).order_by(WorkSession.task_id.desc()).limit(10).all()
     db.close()
     
     if latest_session:
-        return {
-            "task_name": latest_session.task_name,
-            "time_worked": latest_session.time_worked,
-            "time_saved": latest_session.time_saved
-        }
+        return [
+            {
+                "task_name": session.task_name,
+                "time_worked": session.time_worked,
+                "time_saved": session.time_saved
+            }
+            for session in latest_session
+        ]
     else:
-        return {"task_name": None, "time_worked": 0}
+        return [{"task_name": None, "time_worked": 0, "time_saved": None}]
