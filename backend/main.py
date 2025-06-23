@@ -64,9 +64,25 @@ async def get_latest_session():
             {
                 "task_name": session.task_name,
                 "time_worked": session.time_worked,
+                "task_id": session.task_id,
                 "time_saved": session.time_saved
             }
             for session in latest_session
         ]
     else:
-        return [{"task_name": None, "time_worked": 0, "time_saved": None}]
+        return [{"task_name": None, "time_worked": 0, "task_id": None, "time_saved": None}]
+
+@app.delete("/task/{task_id}")
+async def delete_task(task_id: int):
+    db = SessionLocal()
+    # Find the task by ID
+    task_to_delete = db.query(WorkSession).filter(WorkSession.task_id == task_id).first()
+    
+    if task_to_delete:
+        db.delete(task_to_delete)
+        db.commit()
+        db.close()
+        return {"message": "Task deleted successfully"}
+    else:
+        db.close()
+        return {"error": "Task not found"}
