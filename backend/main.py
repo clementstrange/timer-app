@@ -86,3 +86,22 @@ async def delete_task(task_id: int):
     else:
         db.close()
         return {"error": "Task not found"}
+    
+@app.put("/task/{task_id}")
+async def edit_task(task_id: int, request: Request):
+    body = await request.json()
+    task_name = body.get("task_name")
+    time_worked = body.get("time_worked")
+    
+    db = SessionLocal()
+    task_to_edit = db.query(WorkSession).filter(WorkSession.task_id == task_id).first()
+    
+    if task_to_edit:
+        task_to_edit.task_name = task_name
+        task_to_edit.time_worked = time_worked
+        db.commit()
+        db.close()
+        return {"message": "Task edited successfully"}
+    else:
+        db.close()
+        return {"error": "Task not found"}

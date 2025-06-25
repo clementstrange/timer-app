@@ -8,7 +8,10 @@ function App() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const currentTaskRef = useRef("")
   const hasStartedRef = useRef(false);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null); 
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
+  const [editTaskName, setEditTaskName] = useState("")
+  const [editTimeWorked, setEditTimeWorked] = useState(0)
   const [timerState, setTimerState] = useState("stopped") // "stopped", "running", "paused"
   React.useEffect(() => {
   fetchTasks();
@@ -98,7 +101,31 @@ function reset() {
 
 
 }
+  function editTask(task_id: number){
+  setEditingTaskId(task_id)
+  // Find the task being edited
+  const taskToEdit = completedTasks.find(task => task.task_id === task_id)
+  if (taskToEdit) {
+    setEditTaskName(taskToEdit.task_name)
+    setEditTimeWorked(taskToEdit.time_worked)
+  }
+}
   
+  function saveTask(task_id: number) {
+  // Send the edited values to backend
+  fetch(`http://127.0.0.1:8000/task/${task_id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      task_name: editTaskName, 
+      time_worked: editTimeWorked 
+    })
+  })
+  .then(() => {
+    setEditingTaskId(null); // Exit edit mode
+    fetchTasks(); // Refresh the list
+  });
+}
     return (
  <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", padding: "20px", gap: "20px" }}>
    {/* Left side - Task entry and history */}
@@ -115,8 +142,28 @@ function reset() {
        {completedTasks.length > 0 ? (
          completedTasks.map((task, index) => (
              <div key={index} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-             {task.task_name}: {task.time_worked} seconds     
-             <button onClick={() => deleteTask(task.task_id)}>Delete</button>
+             {editingTaskId === task.task_id ? (
+            <div>
+              <input
+              placeholder={`Editing "${task.task_name}"`}
+              value={editTaskName}
+              onChange={(e) => setEditTaskName(e.target.value)}
+              />
+              <input
+              type="number"
+              placeholder={task.time_worked ? `${task.time_worked}` : "Time worked"}
+              value = {editTimeWorked}
+              onChange={(e) => setEditTimeWorked(Number(e.target.value))}
+              style={{ width: "100px", marginLeft: "8px" }}
+              />
+              <button onClick={() => saveTask(task.task_id)}>Save</button>
+              <button onClick={() => setEditingTaskId(null)}>Cancel</button>
+            </div>) : (
+             <div>
+              {task.task_name}: {task.time_worked} seconds     
+              <button onClick={() => editTask(task.task_id)}>Edit</button>
+              <button onClick={() => deleteTask(task.task_id)}>Delete</button>
+             </div>)}
            </div>
          ))
        ) : (
