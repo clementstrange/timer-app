@@ -38,7 +38,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-print("FastAPI server starting with CRUD endpoints")
 
 # ===== HELPER FUNCTIONS =====
 def get_db():
