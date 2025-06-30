@@ -18,7 +18,9 @@ function App() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const currentTaskRef = useRef("");
   const hasStartedRef = useRef(false);
-
+  
+  // URL for the backend API
+  const API_BASE_URL = "https://believable-courage-production.up.railway.app";
   // ===== STYLES =====
   const containerStyle = { 
     display: "flex", 
@@ -124,7 +126,7 @@ function App() {
     const taskName = currentTaskRef.current;
 
     if (taskName && hasStartedRef.current && timeWorked > 0) {
-      await fetch("http://127.0.0.1:8000/task", {
+      await fetch(`${API_BASE_URL}/task`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ task: taskName, time: timeWorked })
@@ -134,7 +136,7 @@ function App() {
   }
 
   function fetchTasks() {
-    fetch("http://127.0.0.1:8000/latest-session", {
+    fetch(`${API_BASE_URL}/latest-session`, {
       method: "GET",
       headers: { "Content-Type": "application/json" }
     })
@@ -159,7 +161,7 @@ function App() {
 
   function saveTask(task_id: number) {
     // Send the edited values to backend
-    fetch(`http://127.0.0.1:8000/task/${task_id}`, {
+    fetch(`${API_BASE_URL}/task/${task_id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -174,7 +176,7 @@ function App() {
   }
 
   function deleteTask(task_id: number) {
-    fetch(`http://127.0.0.1:8000/task/${task_id}`, {
+    fetch(`${API_BASE_URL}/task/${task_id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" }
     })
