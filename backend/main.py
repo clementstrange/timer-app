@@ -34,7 +34,10 @@ app = FastAPI(title="Timer App API")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",  # For local development
+        "https://timer-app-q7nv.vercel.app"  # Your live frontend
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
