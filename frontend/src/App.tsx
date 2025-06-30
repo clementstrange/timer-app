@@ -99,8 +99,8 @@ function App() {
     setTimerState("paused");
   }
 
-  function reset() {
-    saveWorkSession();
+  async function reset() {
+    await saveWorkSession();
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -119,12 +119,12 @@ function App() {
     currentTaskRef.current = inputValue;
   }
 
-  function saveWorkSession() {
+  async function saveWorkSession() {
     const timeWorked = 60 - count;
     const taskName = currentTaskRef.current;
 
     if (taskName && hasStartedRef.current && timeWorked > 0) {
-      fetch("http://127.0.0.1:8000/task", {
+      await fetch("http://127.0.0.1:8000/task", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ task: taskName, time: timeWorked })
