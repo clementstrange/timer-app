@@ -2,12 +2,19 @@ import React from 'react';
 import { useState, useRef } from 'react';
 
 function App() {
+  function getSessionDuration(type: any) {
+    if (type === "work") return 25 * 60; // 1500 seconds
+    if (type === "break") return 5 * 60;  // 300 seconds
+    return 25 * 60; // default
+}
   // ===== STATE VARIABLES =====
-  const [count, setCount] = useState(60);
+  const [count, setCount] = useState(getSessionDuration("work"));
   const [task, setTask] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [timerState, setTimerState] = useState("stopped"); // "stopped", "running", "paused"
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
+  const [sessionType, setSessionType] = useState("work"); // "work", "break"
+  const [completedPomos, setCompletedPomos] = useState(0);
   
   // Edit mode state
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null); // Track which task is being edited (null = none)
@@ -69,8 +76,32 @@ function App() {
   React.useEffect(() => {
     fetchTasks();
   }, []);
+  
+  React.useEffect(() => {
+  if (count === 0 && timerState === "running") {
+    // Timer just finished
+    if (sessionType === "work") {
+      // Work session completed
+      setCompletedPomos(prev => prev + 1);
+      setSessionType("break");
+    } else if (sessionType === "break") {
+      // Break completed
+      setSessionType("work");
+    }
+    // The timer will automatically restart due to the sessionType useEffect
+  }
+}, [count, timerState, sessionType]);
+  
+React.useEffect(() => {
+  setCount(getSessionDuration(sessionType));
+  // If timer was running, keep it running for the new session
+  if (timerState === "running") {
+    start();  // Restart the timer with new duration
+  }
+}, [sessionType]);
 
   // ===== TIMER FUNCTIONS =====
+  
   function start() {
     hasStartedRef.current = true;
     setTimerState("running");
@@ -111,7 +142,8 @@ function App() {
     timerRef.current = null;
     fetchTasks();
     setTimerState("stopped");
-    setCount(60);
+    setSessionType("work");  // Always reset to work
+    setCompletedPomos(0); 
   }
 
   // ===== TASK MANAGEMENT FUNCTIONS =====
@@ -122,7 +154,7 @@ function App() {
   }
 
   async function saveWorkSession() {
-    const timeWorked = 60 - count;
+  const timeWorked = getSessionDuration(sessionType) - count;
     const taskName = currentTaskRef.current;
 
     if (taskName && hasStartedRef.current && timeWorked > 0) {
@@ -237,6 +269,8 @@ function App() {
 
       {/* Right side - Timer and controls */}
       <div style={rightColumnStyle}>
+        <h1>{sessionType === "work" ? "WORK SESSION" : "BREAK TIME"}</h1>
+        <h1>Pomodoros: {completedPomos}/4</h1>
         <h1>Active Task:</h1>
         <h1>{task ? task : "None"}</h1>
         <h1>{count}</h1>

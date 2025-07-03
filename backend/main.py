@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from fastapi import FastAPI, Request # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from sqlalchemy import create_engine, Column, Integer, String, DateTime # type: ignore
+from sqlalchemy.ext.declarative import declarative_base # type: ignore
+from sqlalchemy.orm import sessionmaker # type: ignore
 from datetime import datetime
 import os
 
