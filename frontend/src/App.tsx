@@ -5,7 +5,8 @@ function App() {
   function getSessionDuration(type: any) {
     if (type === "work") return 25 * 60; // 1500 seconds
     if (type === "break") return 5 * 60;  // 300 seconds
-    return 25 * 60; // default
+    return 25 // test version
+    //return 25 * 60; // default version with 25 minutes 
 }
   // ===== STATE VARIABLES =====
   const [count, setCount] = useState(getSessionDuration("work"));
