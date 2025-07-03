@@ -214,7 +214,14 @@ React.useEffect(() => {
     })
       .then(() => fetchTasks());
   }
-
+  
+  function formatTime(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  const paddedSeconds = remainingSeconds.toString().padStart(2, '0');
+  
+  return `${minutes}:${paddedSeconds}`;
+}
   // ===== RENDER =====
   return (
     <div style={containerStyle}>
@@ -273,7 +280,7 @@ React.useEffect(() => {
         <h1>Pomodoros: {completedPomos}/4</h1>
         <h1>Active Task:</h1>
         <h1>{task ? task : "None"}</h1>
-        <h1>{count}</h1>
+        <h1>{formatTime(count)}</h1>
         <div style={buttonGroupStyle}>
           <button onClick={() => {
             if (timerState === "stopped") {
