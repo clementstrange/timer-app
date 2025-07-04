@@ -94,14 +94,26 @@ function App() {
   }
 }, [count, timerState, sessionType]);
   
+// React.useEffect(() => {
+//   setCount(getSessionDuration(sessionType));
+//   // If timer was running, keep it running for the new session
+//   if (timerState === "running") {
+//     start();  // Restart the timer with new duration
+//   }
+// }, [sessionType]);
+
 React.useEffect(() => {
   setCount(getSessionDuration(sessionType));
-  // If timer was running, keep it running for the new session
   if (timerState === "running") {
-    start();  // Restart the timer with new duration
+    // Don't call start(), just restart the timer directly
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    timerRef.current = setInterval(() => {
+      setCount(prev => prev <= 0 ? 0 : prev - 1);
+    }, 1000);
   }
 }, [sessionType]);
-
   // ===== TIMER FUNCTIONS =====
   
   function start() {
