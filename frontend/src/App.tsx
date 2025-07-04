@@ -80,39 +80,25 @@ function App() {
     fetchTasks();
   }, []);
   
+// Add this useEffect to sync the ref
 React.useEffect(() => {
-  console.log("🔄 Session changed to:", sessionType);
+  currentSessionTypeRef.current = sessionType;
+}, [sessionType]);
+
+// Fix the sessionType useEffect to actually restart the timer
+React.useEffect(() => {
   setCount(getSessionDuration(sessionType));
   
   if (timerState === "running" && sessionType === "break") {
-    console.log("🔄 Restarting timer for break");
-    // restart timer logic
-  }
-  // Don't auto-restart for work sessions
-}, [sessionType]);
-
-React.useEffect(() => {
-  if (count === 0 && timerState === "running") {
-    console.log("🔥 TIMER HIT ZERO!");
-    console.log("Current sessionType:", currentSessionTypeRef.current);
-    console.log("Current timerState:", timerState);
-    
-    if (currentSessionTypeRef.current === "work") {
-      console.log("✅ Work session ending, switching to break");
-      setCompletedPomos(prev => prev + 1);
-      setSessionType("break");
-      // Break will auto-start due to sessionType useEffect
-    } else if (currentSessionTypeRef.current === "break") {
-      console.log("✅ Break ending, switching to work");
-      setSessionType("work");
-      // Stop the timer - user must manually start next work session
-      setTimerState("stopped");
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
+    // Actually restart the timer for break
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
     }
+    timerRef.current = setInterval(() => {
+      setCount(prev => prev <= 0 ? 0 : prev - 1);
+    }, 1000);
   }
-}, [count, timerState]);
+}, [sessionType]);
 //   React.useEffect(() => {
 //   if (count === 0 && timerState === "running") {
 //     // Timer just finished
