@@ -84,14 +84,17 @@ function App() {
     console.log("🔥 TIMER HIT ZERO!");
     console.log("Current sessionType:", sessionType);
     
-    if (sessionType === "work") {
-      console.log("✅ Work session ending, switching to break");
-      setCompletedPomos(prev => prev + 1);
-      setSessionType("break");
-    } else if (sessionType === "break") {
-      console.log("✅ Break ending, switching to work");
-      setSessionType("work");
-    }
+    // Add a small delay to prevent race condition
+    setTimeout(() => {
+      if (sessionType === "work") {
+        console.log("✅ Work session ending, switching to break");
+        setCompletedPomos(prev => prev + 1);
+        setSessionType("break");
+      } else if (sessionType === "break") {
+        console.log("✅ Break ending, switching to work");
+        setSessionType("work");
+      }
+    }, 100);  // Small delay to let count update
   }
 }, [count, timerState, sessionType]);
 
