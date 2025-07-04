@@ -82,16 +82,13 @@ function App() {
   
 React.useEffect(() => {
   console.log("🔄 Session changed to:", sessionType);
-  console.log("🔄 timerState is:", timerState);
-  console.log("🔄 Setting count to:", getSessionDuration(sessionType));
   setCount(getSessionDuration(sessionType));
   
-  if (timerState === "running") {
-    console.log("🔄 Restarting timer");
-    // your timer restart logic
-  } else {
-    console.log("🔄 Timer not running, not restarting");
+  if (timerState === "running" && sessionType === "break") {
+    console.log("🔄 Restarting timer for break");
+    // restart timer logic
   }
+  // Don't auto-restart for work sessions
 }, [sessionType]);
 
 React.useEffect(() => {
@@ -104,9 +101,15 @@ React.useEffect(() => {
       console.log("✅ Work session ending, switching to break");
       setCompletedPomos(prev => prev + 1);
       setSessionType("break");
+      // Break will auto-start due to sessionType useEffect
     } else if (currentSessionTypeRef.current === "break") {
       console.log("✅ Break ending, switching to work");
       setSessionType("work");
+      // Stop the timer - user must manually start next work session
+      setTimerState("stopped");
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     }
   }
 }, [count, timerState]);
