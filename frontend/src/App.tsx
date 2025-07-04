@@ -80,15 +80,25 @@ function App() {
     fetchTasks();
   }, []);
   
-
 React.useEffect(() => {
-  currentSessionTypeRef.current = sessionType;
+  console.log("🔄 Session changed to:", sessionType);
+  console.log("🔄 timerState is:", timerState);
+  console.log("🔄 Setting count to:", getSessionDuration(sessionType));
+  setCount(getSessionDuration(sessionType));
+  
+  if (timerState === "running") {
+    console.log("🔄 Restarting timer");
+    // your timer restart logic
+  } else {
+    console.log("🔄 Timer not running, not restarting");
+  }
 }, [sessionType]);
 
 React.useEffect(() => {
   if (count === 0 && timerState === "running") {
     console.log("🔥 TIMER HIT ZERO!");
     console.log("Current sessionType:", currentSessionTypeRef.current);
+    console.log("Current timerState:", timerState);
     
     if (currentSessionTypeRef.current === "work") {
       console.log("✅ Work session ending, switching to break");
@@ -99,7 +109,7 @@ React.useEffect(() => {
       setSessionType("work");
     }
   }
-}, [count, timerState]); // Remove sessionType from dependency array
+}, [count, timerState]);
 //   React.useEffect(() => {
 //   if (count === 0 && timerState === "running") {
 //     // Timer just finished
