@@ -17,7 +17,8 @@ function App() {
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
   const [sessionType, setSessionType] = useState("work"); // "work", "break"
   const [completedPomos, setCompletedPomos] = useState(0);
-  
+  const currentSessionTypeRef = useRef("work");
+
   // Edit mode state
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null); // Track which task is being edited (null = none)
   const [editTaskName, setEditTaskName] = useState("");
@@ -79,35 +80,26 @@ function App() {
     fetchTasks();
   }, []);
   
-  React.useEffect(() => {
-  if (count === 0 && timerState === "running") {
-    console.log("🔥 TIMER HIT ZERO!");
-    console.log("Current sessionType:", sessionType);
-    
-    // Add a small delay to prevent race condition
-    setTimeout(() => {
-      if (sessionType === "work") {
-        console.log("✅ Work session ending, switching to break");
-        setCompletedPomos(prev => prev + 1);
-        setSessionType("break");
-      } else if (sessionType === "break") {
-        console.log("✅ Break ending, switching to work");
-        setSessionType("work");
-      }
-    }, 100);  // Small delay to let count update
-  }
-}, [count, timerState, sessionType]);
 
 React.useEffect(() => {
-  console.log("🔄 Session changed to:", sessionType);
-  console.log("🔄 Setting count to:", getSessionDuration(sessionType));
-  setCount(getSessionDuration(sessionType));
-  
-  if (timerState === "running") {
-    console.log("🔄 Restarting timer");
-    // ... your timer restart logic
-  }
+  currentSessionTypeRef.current = sessionType;
 }, [sessionType]);
+
+React.useEffect(() => {
+  if (count === 0 && timerState === "running") {
+    console.log("🔥 TIMER HIT ZERO!");
+    console.log("Current sessionType:", currentSessionTypeRef.current);
+    
+    if (currentSessionTypeRef.current === "work") {
+      console.log("✅ Work session ending, switching to break");
+      setCompletedPomos(prev => prev + 1);
+      setSessionType("break");
+    } else if (currentSessionTypeRef.current === "break") {
+      console.log("✅ Break ending, switching to work");
+      setSessionType("work");
+    }
+  }
+}, [count, timerState]); // Remove sessionType from dependency array
 //   React.useEffect(() => {
 //   if (count === 0 && timerState === "running") {
 //     // Timer just finished
