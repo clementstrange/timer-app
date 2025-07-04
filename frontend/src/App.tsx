@@ -81,18 +81,44 @@ function App() {
   
   React.useEffect(() => {
   if (count === 0 && timerState === "running") {
-    // Timer just finished
+    console.log("🔥 TIMER HIT ZERO!");
+    console.log("Current sessionType:", sessionType);
+    
     if (sessionType === "work") {
-      // Work session completed
+      console.log("✅ Work session ending, switching to break");
       setCompletedPomos(prev => prev + 1);
       setSessionType("break");
     } else if (sessionType === "break") {
-      // Break completed
+      console.log("✅ Break ending, switching to work");
       setSessionType("work");
     }
-    // The timer will automatically restart due to the sessionType useEffect
   }
 }, [count, timerState, sessionType]);
+
+React.useEffect(() => {
+  console.log("🔄 Session changed to:", sessionType);
+  console.log("🔄 Setting count to:", getSessionDuration(sessionType));
+  setCount(getSessionDuration(sessionType));
+  
+  if (timerState === "running") {
+    console.log("🔄 Restarting timer");
+    // ... your timer restart logic
+  }
+}, [sessionType]);
+//   React.useEffect(() => {
+//   if (count === 0 && timerState === "running") {
+//     // Timer just finished
+//     if (sessionType === "work") {
+//       // Work session completed
+//       setCompletedPomos(prev => prev + 1);
+//       setSessionType("break");
+//     } else if (sessionType === "break") {
+//       // Break completed
+//       setSessionType("work");
+//     }
+//     // The timer will automatically restart due to the sessionType useEffect
+//   }
+// }, [count, timerState, sessionType]);
   
 // React.useEffect(() => {
 //   setCount(getSessionDuration(sessionType));
@@ -102,18 +128,9 @@ function App() {
 //   }
 // }, [sessionType]);
 
-React.useEffect(() => {
-  setCount(getSessionDuration(sessionType));
-  if (timerState === "running") {
-    // Don't call start(), just restart the timer directly
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    timerRef.current = setInterval(() => {
-      setCount(prev => prev <= 0 ? 0 : prev - 1);
-    }, 1000);
-  }
-}, [sessionType]);
+
+
+
   // ===== TIMER FUNCTIONS =====
   
   function start() {
