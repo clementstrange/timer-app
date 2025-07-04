@@ -82,7 +82,7 @@ function App() {
   
 // Add this useEffect to sync the ref
 React.useEffect(() => {
-  currentSessionTypeRef.current = sessionType;
+  currentSessionTypeRef.current = sessionType; // Sync the ref!
 }, [sessionType]);
 
 // Fix the sessionType useEffect to actually restart the timer
