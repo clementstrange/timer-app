@@ -80,17 +80,17 @@ function App() {
     fetchTasks();
   }, []);
   
-// Add this useEffect to sync the ref
+// 1. Add the missing ref sync
 React.useEffect(() => {
-  currentSessionTypeRef.current = sessionType; // Sync the ref!
+  currentSessionTypeRef.current = sessionType;
 }, [sessionType]);
 
-// Fix the sessionType useEffect to actually restart the timer
+// 2. Fix the sessionType useEffect with proper timer restart
 React.useEffect(() => {
   setCount(getSessionDuration(sessionType));
   
-  if (timerState === "running" && sessionType === "break") {
-    // Actually restart the timer for break
+  if (timerState === "running") {
+    // Restart timer for ANY session type when timer is running
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -99,32 +99,22 @@ React.useEffect(() => {
     }, 1000);
   }
 }, [sessionType]);
-//   React.useEffect(() => {
-//   if (count === 0 && timerState === "running") {
-//     // Timer just finished
-//     if (sessionType === "work") {
-//       // Work session completed
-//       setCompletedPomos(prev => prev + 1);
-//       setSessionType("break");
-//     } else if (sessionType === "break") {
-//       // Break completed
-//       setSessionType("work");
-//     }
-//     // The timer will automatically restart due to the sessionType useEffect
-//   }
-// }, [count, timerState, sessionType]);
-  
-// React.useEffect(() => {
-//   setCount(getSessionDuration(sessionType));
-//   // If timer was running, keep it running for the new session
-//   if (timerState === "running") {
-//     start();  // Restart the timer with new duration
-//   }
-// }, [sessionType]);
 
-
-
-
+// 3. Keep the transition logic simple
+React.useEffect(() => {
+  if (count === 0 && timerState === "running") {
+    if (currentSessionTypeRef.current === "work") {
+      setCompletedPomos(prev => prev + 1);
+      setSessionType("break");
+    } else if (currentSessionTypeRef.current === "break") {
+      setSessionType("work");
+      setTimerState("stopped");
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    }
+  }
+}, [count, timerState]);
   // ===== TIMER FUNCTIONS =====
   
   function start() {
