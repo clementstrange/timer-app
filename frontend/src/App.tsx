@@ -3,11 +3,11 @@ import { useState, useRef } from 'react';
 
 function App() {
   function getSessionDuration(type: any) {
-    if (type === "work") return 25; // Test only 25 seconds
-    // if (type === "work") return 25 * 60; // Production z1500 seconds
-    if (type === "break") return 5 * 60;  // 300 seconds
-    return 25 // test version
-    //return 25 * 60; // default version with 25 minutes 
+  if (type === "work") return 25; // Test only 25 seconds
+  if (type === "break") return 5;  // Test only 5 seconds for break too
+  
+  // No default return - force explicit types
+  throw new Error(`Unknown session type: ${type}`);
 }
   // ===== STATE VARIABLES =====
   const [count, setCount] = useState(getSessionDuration("work"));
