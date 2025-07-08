@@ -1,26 +1,75 @@
 import React from 'react';
 import { useState, useRef } from 'react';
 
+// #region Component Styles
+const containerStyle = { 
+  display: "flex", 
+  flexDirection: "row" as const, 
+  alignItems: "flex-start", 
+  padding: "20px", 
+  gap: "20px" 
+};
+
+const leftColumnStyle = { 
+  flex: 0.4, 
+  display: "flex", 
+  flexDirection: "column" as const, 
+  alignItems: "center" 
+};
+
+const rightColumnStyle = { 
+  flex: 1, 
+  display: "flex", 
+  flexDirection: "column" as const, 
+  alignItems: "center" 
+};
+
+const taskListStyle = { 
+  display: "flex", 
+  flexDirection: "column" as const, 
+  alignItems: "center", 
+  gap: "10px", 
+  width: "100%", 
+  marginTop: "20px" 
+};
+
+const taskItemStyle = { 
+  display: "flex", 
+  alignItems: "center", 
+  gap: "10px" 
+};
+
+const buttonGroupStyle = { 
+  display: "flex", 
+  gap: "10px", 
+  justifyContent: "center" 
+};
+// #endregion
+
+const API_BASE_URL = "https://believable-courage-production.up.railway.app";
+
 function App() {
   function getSessionDuration(type: any) {
-  if (type === "work") return 25; // Test only 25 seconds
-  if (type === "break") return 5;  // Test only 5 seconds for break too
-  if (type === "longBreak") return 10; // Test only 10 seconds for long break
-  // No default return - force explicit types
-  throw new Error(`Unknown session type: ${type}`);
-}
-  // ===== STATE VARIABLES =====
+    if (type === "work") return 25;
+    if (type === "break") return 5;
+    if (type === "longBreak") return 10;
+    throw new Error(`Unknown session type: ${type}`);
+  }
+
+  // #region State Variables
+  // Timer state
   const [count, setCount] = useState(getSessionDuration("work"));
+  const [timerState, setTimerState] = useState("stopped");
+  const [sessionType, setSessionType] = useState("work");
+  const [completedPomos, setCompletedPomos] = useState(0);
+
+  // Task state  
   const [task, setTask] = useState("");
   const [inputValue, setInputValue] = useState("");
-  const [timerState, setTimerState] = useState("stopped"); // "stopped", "running", "paused"
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
-  const [sessionType, setSessionType] = useState("work"); // "work", "break"
-  const [completedPomos, setCompletedPomos] = useState(0);
-  const currentSessionTypeRef = useRef("work");
 
   // Edit mode state
-  const [editingTaskId, setEditingTaskId] = useState<number | null>(null); // Track which task is being edited (null = none)
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [editTaskName, setEditTaskName] = useState("");
   const [editTimeWorked, setEditTimeWorked] = useState(0);
   
@@ -28,131 +77,73 @@ function App() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const currentTaskRef = useRef("");
   const hasStartedRef = useRef(false);
-  
-  // URL for the backend API
-  const API_BASE_URL = "https://believable-courage-production.up.railway.app";
-  // ===== STYLES =====
-  const containerStyle = { 
-    display: "flex", 
-    flexDirection: "row" as const, 
-    alignItems: "flex-start", 
-    padding: "20px", 
-    gap: "20px" 
-  };
-  
-  const leftColumnStyle = { 
-    flex: 0.4, 
-    display: "flex", 
-    flexDirection: "column" as const, 
-    alignItems: "center" 
-  };
-  
-  const rightColumnStyle = { 
-    flex: 1, 
-    display: "flex", 
-    flexDirection: "column" as const, 
-    alignItems: "center" 
-  };
-  
-  const taskListStyle = { 
-    display: "flex", 
-    flexDirection: "column" as const, 
-    alignItems: "center", 
-    gap: "10px", 
-    width: "100%", 
-    marginTop: "20px" 
-  };
-  
-  const taskItemStyle = { 
-    display: "flex", 
-    alignItems: "center", 
-    gap: "10px" 
-  };
-  
-  const buttonGroupStyle = { 
-    display: "flex", 
-    gap: "10px", 
-    justifyContent: "center" 
-  };
+  const currentSessionTypeRef = useRef("work");
+  // #endregion
 
-  // ===== LIFECYCLE =====
-React.useEffect(() => {
-  fetchTasks();
-}, []);
+  // ==================== LIFECYCLE EFFECTS ====================
   
-// 1. Add the missing ref sync
-React.useEffect(() => {
-  currentSessionTypeRef.current = sessionType;
-}, [sessionType]);
+  // Initial data fetch
+  React.useEffect(() => {
+    fetchTasks();
+  }, []);
+  
+  // Keep session type ref in sync
+  React.useEffect(() => {
+    currentSessionTypeRef.current = sessionType;
+  }, [sessionType]);
 
-// 2. Fix the sessionType useEffect with proper timer restart
-React.useEffect(() => {
-  setCount(getSessionDuration(sessionType));
-  
-  if (timerState === "running") {
-    // Restart timer for ANY session type when timer is running
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
+  // Handle session type changes and timer restart
+  React.useEffect(() => {
+    setCount(getSessionDuration(sessionType));
+    
+    if (timerState === "running") {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      timerRef.current = setInterval(() => {
+        setCount(prev => prev <= 0 ? 0 : prev - 1);
+      }, 1000);
     }
-    timerRef.current = setInterval(() => {
-      setCount(prev => prev <= 0 ? 0 : prev - 1);
-    }, 1000);
-  }
-}, [sessionType]);
+  }, [sessionType]);
 
-React.useEffect(() => {
-  if (count === 0 && timerState === "running") {
-    if (currentSessionTypeRef.current === "work") {
-      saveWorkSession().then(() => {
-        fetchTasks(); // Refresh the task list after saving
-      });
-      setCompletedPomos(prev => {
-        const newCount = prev + 1;
-        if (newCount === 4) {
-          setSessionType("longBreak"); // Long break after 4th pomo
-          return 0; // Reset counter
-        } else {
-          setSessionType("break"); // Regular break
-          return newCount; // Keep counting
+  // Handle session transitions when timer reaches 0
+  React.useEffect(() => {
+    if (count === 0 && timerState === "running") {
+      if (currentSessionTypeRef.current === "work") {
+        saveWorkSession().then(() => {
+          fetchTasks();
+        });
+        setCompletedPomos(prev => {
+          const newCount = prev + 1;
+          if (newCount === 4) {
+            setSessionType("longBreak");
+            return 0;
+          } else {
+            setSessionType("break");
+            return newCount;
+          }
+        });
+      } else if (currentSessionTypeRef.current === "break") {
+        setSessionType("work");
+        setTimerState("stopped");
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
         }
-      });
-    } else if (currentSessionTypeRef.current === "break") {
-      setSessionType("work");
-      setTimerState("stopped");
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    } else if (currentSessionTypeRef.current === "longBreak") {
-      // Long break ending - same as regular break
-      setSessionType("work");
-      setTimerState("stopped");
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
+      } else if (currentSessionTypeRef.current === "longBreak") {
+        setSessionType("work");
+        setTimerState("stopped");
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
       }
     }
-  }
-}, [count, timerState]);
-// // 3. Keep the transition logic simple
-// React.useEffect(() => {
-//   if (count === 0 && timerState === "running") {
-//     if (currentSessionTypeRef.current === "work") {
-//       setCompletedPomos(prev => prev + 1);
-//       setSessionType("break");
-//     } else if (currentSessionTypeRef.current === "break") {
-//       setSessionType("work");
-//       setTimerState("stopped");
-//       if (timerRef.current) {
-//         clearInterval(timerRef.current);
-//       }
-//     }
-//   }
-// }, [count, timerState]);
-  // ===== TIMER FUNCTIONS =====
+  }, [count, timerState]);
+
+  // ==================== TIMER LOGIC ====================
   
   function start() {
     hasStartedRef.current = true;
     setTimerState("running");
-    console.log("Starting timer");
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -189,19 +180,29 @@ React.useEffect(() => {
     timerRef.current = null;
     fetchTasks();
     setTimerState("stopped");
-    setSessionType("work");  // Always reset to work
+    setSessionType("work");
     setCompletedPomos(0); 
   }
 
-  // ===== TASK MANAGEMENT FUNCTIONS =====
+  // ==================== TASK MANAGEMENT ====================
+  
   function submit() {
     saveWorkSession();
     setTask(inputValue);
     currentTaskRef.current = inputValue;
   }
 
+  function formatTime(seconds: number) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    const paddedSeconds = remainingSeconds.toString().padStart(2, '0');
+    
+    return `${minutes}:${paddedSeconds}`;
+  }
+
+  // #region API Calls
   async function saveWorkSession() {
-  const timeWorked = getSessionDuration(sessionType) - count;
+    const timeWorked = getSessionDuration(sessionType) - count;
     const taskName = currentTaskRef.current;
 
     if (taskName && hasStartedRef.current && timeWorked > 0) {
@@ -221,16 +222,16 @@ React.useEffect(() => {
     })
       .then(response => response.json())
       .then(data => {
-        console.log("Fetched tasks:", data);
         setCompletedTasks(data);
       });
   }
+  // #endregion
 
-  // ===== CRUD FUNCTIONS =====
+  // ==================== TASK EDITING ====================
+  
   function editTask(task_id: number) {
     setEditingTaskId(task_id);
     
-    // Find the task being edited
     const taskToEdit = completedTasks.find(task => task.task_id === task_id);
     if (taskToEdit) {
       setEditTaskName(taskToEdit.task_name);
@@ -239,7 +240,6 @@ React.useEffect(() => {
   }
 
   function saveTask(task_id: number) {
-    // Send the edited values to backend
     fetch(`${API_BASE_URL}/task/${task_id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -249,8 +249,8 @@ React.useEffect(() => {
       })
     })
       .then(() => {
-        setEditingTaskId(null); // Exit edit mode
-        fetchTasks(); // Refresh the list
+        setEditingTaskId(null);
+        fetchTasks();
       });
   }
 
@@ -261,18 +261,11 @@ React.useEffect(() => {
     })
       .then(() => fetchTasks());
   }
+
+  // ==================== RENDER ====================
   
-  function formatTime(seconds: number) {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  const paddedSeconds = remainingSeconds.toString().padStart(2, '0');
-  
-  return `${minutes}:${paddedSeconds}`;
-}
-  // ===== RENDER =====
   return (
     <div style={containerStyle}>
-      {/* Left side - Task entry and history */}
       <div style={leftColumnStyle}>
         <h3>Ultimate Task Timer</h3>
 
@@ -321,7 +314,6 @@ React.useEffect(() => {
         </div>
       </div>
 
-      {/* Right side - Timer and controls */}
       <div style={rightColumnStyle}>
         <h1>{sessionType === "work" ? "WORK SESSION" : 
         sessionType === "break" ? "BREAK TIME" : "LONG BREAK"}</h1>
@@ -330,40 +322,36 @@ React.useEffect(() => {
         <h1>{task ? task : "None"}</h1>
         <h1>{formatTime(count)}</h1>
         <div style={buttonGroupStyle}>
-  <button onClick={() => {
-    if (timerState === "stopped") {
-      start();
-    } else if (timerState === "running") {
-      pause();
-    } else if (timerState === "paused") {
-      start();
-    }
-  }}>
-    {timerState === "stopped" ? "Start" :
-      timerState === "running" ? "Pause" :
-        "Resume"}
-  </button>
-  
-  {sessionType === "work" ? (
-    <button onClick={reset}>Finish Session</button>
-  ) : (
-    <>
-      
-      <button onClick={() => setCount(prev => prev + 5)}>+5 sec</button> 
-      <button onClick={() => setCount(prev => Math.max(0, prev - 5))}>-5 sec</button>
-      {/* Remember to change the seconds to minutes */}
-      <button onClick={() => {
-      // Skip break - go straight to work
-      
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      setTimerState("stopped");
-      setSessionType("work");
-    }}>Skip Break</button>
-    </>
-  )}
-</div>
+          <button onClick={() => {
+            if (timerState === "stopped") {
+              start();
+            } else if (timerState === "running") {
+              pause();
+            } else if (timerState === "paused") {
+              start();
+            }
+          }}>
+            {timerState === "stopped" ? "Start" :
+              timerState === "running" ? "Pause" :
+                "Resume"}
+          </button>
+          
+          {sessionType === "work" ? (
+            <button onClick={reset}>Finish Session</button>
+          ) : (
+            <>
+              <button onClick={() => setCount(prev => prev + 5)}>+5 sec</button> 
+              <button onClick={() => setCount(prev => Math.max(0, prev - 5))}>-5 sec</button>
+              <button onClick={() => {
+                if (timerRef.current) {
+                  clearInterval(timerRef.current);
+                }
+                setTimerState("stopped");
+                setSessionType("work");
+              }}>Skip Break</button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
