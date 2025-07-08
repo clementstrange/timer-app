@@ -251,14 +251,15 @@ function App() {
   }, []);
   
   // Add this useEffect to show timer in title
-React.useEffect(() => {
-  const baseTitle = "Life in Focus";
-  if (timerState === "running") {
-    document.title = `${formatTime(count)} - ${sessionType === "work" ? "Work" : "Break"} | ${baseTitle}`;
-  } else {
-    document.title = baseTitle;
-  }
-}, [count, timerState, sessionType]);
+  React.useEffect(() => {
+    const baseTitle = "Life in Focus";
+    if (timerState === "running") {
+      document.title = `${formatTime(count)} - ${sessionType === "work" ? "Work" : "Break"} | ${baseTitle}`;
+    } else {
+      document.title = baseTitle;
+    }
+  }, [count, timerState, sessionType]);
+  
   // Keep session type ref in sync
   React.useEffect(() => {
     currentSessionTypeRef.current = sessionType;
