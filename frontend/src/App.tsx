@@ -103,7 +103,9 @@ React.useEffect(() => {
 React.useEffect(() => {
   if (count === 0 && timerState === "running") {
     if (currentSessionTypeRef.current === "work") {
-      saveWorkSession(); // Save the completed work session
+      saveWorkSession().then(() => {
+        fetchTasks(); // Refresh the task list after saving
+      });
       setCompletedPomos(prev => {
         const newCount = prev + 1;
         if (newCount === 4) {
