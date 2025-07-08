@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useRef } from 'react';
 
-// #region Component Styles
+// #region Component Styless
 const containerStyle = { 
   display: "flex", 
   flexDirection: "column" as const, 
