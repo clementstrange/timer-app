@@ -784,7 +784,7 @@ function App() {
             ))
           ) : (
             <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
-              No tasks yet. Start a session to track your work!
+              No tasks yet.
             </div>
           )}
         </div>
