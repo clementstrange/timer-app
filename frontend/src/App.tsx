@@ -103,6 +103,7 @@ React.useEffect(() => {
 React.useEffect(() => {
   if (count === 0 && timerState === "running") {
     if (currentSessionTypeRef.current === "work") {
+      saveWorkSession(); // Save the completed work session
       setCompletedPomos(prev => {
         const newCount = prev + 1;
         if (newCount === 4) {
@@ -114,6 +115,13 @@ React.useEffect(() => {
         }
       });
     } else if (currentSessionTypeRef.current === "break") {
+      setSessionType("work");
+      setTimerState("stopped");
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    } else if (currentSessionTypeRef.current === "longBreak") {
+      // Long break ending - same as regular break
       setSessionType("work");
       setTimerState("stopped");
       if (timerRef.current) {
