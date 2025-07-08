@@ -44,9 +44,12 @@ const taskListStyle = {
   alignItems: "stretch", 
   gap: "12px", 
   width: "100%", 
-  marginTop: "20px",
-  maxHeight: "300px",
-  overflowY: "auto" as const
+  maxHeight: "400px",
+  overflowY: "auto" as const,
+  backgroundColor: "white",
+  borderRadius: "12px",
+  padding: "20px",
+  boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
 };
 
 const taskItemStyle = { 
@@ -83,6 +86,24 @@ const buttonGroupStyle = {
 
 const inputStyle = {
   width: "100%",
+  padding: "12px",
+  fontSize: "16px",
+  borderRadius: "8px",
+  border: "2px solid #ddd",
+  outline: "none",
+  transition: "border-color 0.2s"
+};
+
+const compactRowStyle = {
+  display: "flex",
+  gap: "10px",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%"
+};
+
+const taskInputStyle = {
+  width: "200px",
   padding: "12px",
   fontSize: "16px",
   borderRadius: "8px",
@@ -403,90 +424,22 @@ function App() {
       <div style={leftColumnStyle}>
         <h3 style={{margin: "0 0 20px 0", color: "#333"}}>Task Manager</h3>
 
-        <input 
-          style={inputStyle}
-          placeholder="Enter new task" 
-          value={inputValue} 
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && submit()}
-        />
-        
-        <button 
-          style={primaryButtonStyle}
-          onClick={submit}
-          disabled={!inputValue.trim()}
-        >
-          Add Task
-        </button>
-
-        <div style={taskListStyle}>
-          <h4 style={{margin: "0 0 15px 0", color: "#333"}}>Recent Tasks</h4>
-          {completedTasks.length > 0 ? (
-            completedTasks.map((task, index) => (
-              <div key={index} style={taskItemStyle}>
-                {editingTaskId === task.task_id ? (
-                  <div style={editFormStyle}>
-                    <input
-                      style={inputStyle}
-                      placeholder="Task name"
-                      value={editTaskName}
-                      onChange={(e) => setEditTaskName(e.target.value)}
-                    />
-                    <div style={editInputRowStyle}>
-                      <input
-                        style={compactInputStyle}
-                        type="number"
-                        placeholder="Seconds"
-                        value={editTimeWorked}
-                        onChange={(e) => setEditTimeWorked(Number(e.target.value))}
-                      />
-                      <button 
-                        style={successButtonStyle}
-                        onClick={() => saveTask(task.task_id)}
-                      >
-                        Save
-                      </button>
-                      <button 
-                        style={secondaryButtonStyle}
-                        onClick={() => setEditingTaskId(null)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={taskItemContentStyle}>
-                    <div style={{flex: 1, minWidth: "120px"}}>
-                      <div style={{fontWeight: "bold", marginBottom: "4px"}}>
-                        {task.task_name}
-                      </div>
-                      <div style={{color: "#666", fontSize: "14px"}}>
-                        {formatTime(task.time_worked)}
-                      </div>
-                    </div>
-                    <div style={taskButtonsStyle}>
-                      <button 
-                        style={secondaryButtonStyle}
-                        onClick={() => editTask(task.task_id)}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        style={dangerButtonStyle}
-                        onClick={() => deleteTask(task.task_id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
-              No tasks yet. Start a session to track your work!
-            </div>
-          )}
+        <div style={compactRowStyle}>
+          <input 
+            style={taskInputStyle}
+            placeholder="Enter new task" 
+            value={inputValue} 
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && submit()}
+          />
+          
+          <button 
+            style={primaryButtonStyle}
+            onClick={submit}
+            disabled={!inputValue.trim()}
+          >
+            Add Task
+          </button>
         </div>
       </div>
 
@@ -533,7 +486,7 @@ function App() {
               style={secondaryButtonStyle}
               onClick={reset}
             >
-              🏁 Finish
+              Finish
             </button>
           ) : (
             <>
@@ -564,6 +517,76 @@ function App() {
             </>
           )}
         </div>
+      </div>
+
+      <div style={taskListStyle}>
+        <h4 style={{margin: "0 0 15px 0", color: "#333"}}>Recent Tasks</h4>
+        {completedTasks.length > 0 ? (
+          completedTasks.map((task, index) => (
+            <div key={index} style={taskItemStyle}>
+              {editingTaskId === task.task_id ? (
+                <div style={editFormStyle}>
+                  <input
+                    style={inputStyle}
+                    placeholder="Task name"
+                    value={editTaskName}
+                    onChange={(e) => setEditTaskName(e.target.value)}
+                  />
+                  <div style={editInputRowStyle}>
+                    <input
+                      style={compactInputStyle}
+                      type="number"
+                      placeholder="Seconds"
+                      value={editTimeWorked}
+                      onChange={(e) => setEditTimeWorked(Number(e.target.value))}
+                    />
+                    <button 
+                      style={successButtonStyle}
+                      onClick={() => saveTask(task.task_id)}
+                    >
+                      Save
+                    </button>
+                    <button 
+                      style={secondaryButtonStyle}
+                      onClick={() => setEditingTaskId(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={taskItemContentStyle}>
+                  <div style={{flex: 1, minWidth: "120px"}}>
+                    <div style={{fontWeight: "bold", marginBottom: "4px"}}>
+                      {task.task_name}
+                    </div>
+                    <div style={{color: "#666", fontSize: "14px"}}>
+                      {formatTime(task.time_worked)}
+                    </div>
+                  </div>
+                  <div style={taskButtonsStyle}>
+                    <button 
+                      style={secondaryButtonStyle}
+                      onClick={() => editTask(task.task_id)}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      style={dangerButtonStyle}
+                      onClick={() => deleteTask(task.task_id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
+            No tasks yet. Start a session to track your work!
+          </div>
+        )}
       </div>
     </div>
   );
