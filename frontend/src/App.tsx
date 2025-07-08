@@ -348,8 +348,19 @@ React.useEffect(() => {
     <button onClick={reset}>Reset</button>
   ) : (
     <>
-      <button onClick={() => setCount(prev => prev + 5)}>+5 sec</button>
+      
+      <button onClick={() => setCount(prev => prev + 5)}>+5 sec</button> 
       <button onClick={() => setCount(prev => Math.max(0, prev - 5))}>-5 sec</button>
+      // Remember to change ht seconds to minutes
+      <button onClick={() => {
+      // Skip break - go straight to work
+      
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      setTimerState("stopped");
+      setSessionType("work");
+    }}>Skip Break</button>
     </>
   )}
 </div>
