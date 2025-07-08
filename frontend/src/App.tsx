@@ -5,7 +5,7 @@ function App() {
   function getSessionDuration(type: any) {
   if (type === "work") return 25; // Test only 25 seconds
   if (type === "break") return 5;  // Test only 5 seconds for break too
-  
+  if (type === "longBreak") return 10; // Test only 10 seconds for long break
   // No default return - force explicit types
   throw new Error(`Unknown session type: ${type}`);
 }
@@ -76,9 +76,9 @@ function App() {
   };
 
   // ===== LIFECYCLE =====
-  React.useEffect(() => {
-    fetchTasks();
-  }, []);
+React.useEffect(() => {
+  fetchTasks();
+}, []);
   
 // 1. Add the missing ref sync
 React.useEffect(() => {
@@ -100,12 +100,19 @@ React.useEffect(() => {
   }
 }, [sessionType]);
 
-// 3. Keep the transition logic simple
 React.useEffect(() => {
   if (count === 0 && timerState === "running") {
     if (currentSessionTypeRef.current === "work") {
-      setCompletedPomos(prev => prev + 1);
-      setSessionType("break");
+      setCompletedPomos(prev => {
+        const newCount = prev + 1;
+        if (newCount === 4) {
+          setSessionType("longBreak"); // Long break after 4th pomo
+          return 0; // Reset counter
+        } else {
+          setSessionType("break"); // Regular break
+          return newCount; // Keep counting
+        }
+      });
     } else if (currentSessionTypeRef.current === "break") {
       setSessionType("work");
       setTimerState("stopped");
@@ -115,6 +122,21 @@ React.useEffect(() => {
     }
   }
 }, [count, timerState]);
+// // 3. Keep the transition logic simple
+// React.useEffect(() => {
+//   if (count === 0 && timerState === "running") {
+//     if (currentSessionTypeRef.current === "work") {
+//       setCompletedPomos(prev => prev + 1);
+//       setSessionType("break");
+//     } else if (currentSessionTypeRef.current === "break") {
+//       setSessionType("work");
+//       setTimerState("stopped");
+//       if (timerRef.current) {
+//         clearInterval(timerRef.current);
+//       }
+//     }
+//   }
+// }, [count, timerState]);
   // ===== TIMER FUNCTIONS =====
   
   function start() {
@@ -291,7 +313,8 @@ React.useEffect(() => {
 
       {/* Right side - Timer and controls */}
       <div style={rightColumnStyle}>
-        <h1>{sessionType === "work" ? "WORK SESSION" : "BREAK TIME"}</h1>
+        <h1>{sessionType === "work" ? "WORK SESSION" : 
+        sessionType === "break" ? "BREAK TIME" : "LONG BREAK"}</h1>
         <h1>Pomodoros: {completedPomos}/4</h1>
         <h1>Active Task:</h1>
         <h1>{task ? task : "None"}</h1>
