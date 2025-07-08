@@ -226,7 +226,15 @@ function App() {
   // #endregion
 
   // ==================== LIFECYCLE EFFECTS ====================
-  
+  // Add this useEffect to show timer in title
+React.useEffect(() => {
+  const baseTitle = "Life in Focus";
+  if (timerState === "running") {
+    document.title = `${formatTime(count)} - ${sessionType === "work" ? "Work" : "Break"} | ${baseTitle}`;
+  } else {
+    document.title = baseTitle;
+  }
+}, [count, timerState, sessionType]);
   // Initial data fetch
   React.useEffect(() => {
     fetchTasks();
@@ -422,7 +430,7 @@ function App() {
   return (
     <div style={containerStyle}>
       <div style={leftColumnStyle}>
-        <h3 style={{margin: "0 0 20px 0", color: "#333"}}>Task Manager</h3>
+        <h3 style={{margin: "0 0 20px 0", color: "#333"}}>Life in Focus</h3>
 
         <div style={compactRowStyle}>
           <input 
