@@ -8,11 +8,29 @@ const containerStyle = {
   minHeight: "100vh",
   padding: "10px",
   gap: "20px",
+  backgroundColor: "#f5f5f5"
+};
+
+const webContainerStyle = {
+  display: "flex",
+  flexDirection: "column" as const,
+  minHeight: "100vh",
+  backgroundColor: "#e9ecef",
+  padding: "20px",
+  alignItems: "center",
+  justifyContent: "center"
+};
+
+const webFrameStyle = {
+  display: "flex",
+  flexDirection: "column" as const,
+  maxWidth: "600px",
+  width: "100%",
+  gap: "20px",
   backgroundColor: "#f5f5f5",
-  '@media (min-width: 768px)': {
-    flexDirection: "row" as const,
-    padding: "20px"
-  }
+  padding: "20px",
+  borderRadius: "16px",
+  boxShadow: "0 4px 20px rgba(0,0,0,0.15)"
 };
 
 const leftColumnStyle = { 
@@ -226,6 +244,12 @@ function App() {
   // #endregion
 
   // ==================== LIFECYCLE EFFECTS ====================
+  
+  // Initial data fetch
+  React.useEffect(() => {
+    fetchTasks();
+  }, []);
+  
   // Add this useEffect to show timer in title
 React.useEffect(() => {
   const baseTitle = "Life in Focus";
@@ -235,11 +259,6 @@ React.useEffect(() => {
     document.title = baseTitle;
   }
 }, [count, timerState, sessionType]);
-  // Initial data fetch
-  React.useEffect(() => {
-    fetchTasks();
-  }, []);
-  
   // Keep session type ref in sync
   React.useEffect(() => {
     currentSessionTypeRef.current = sessionType;
@@ -425,32 +444,23 @@ React.useEffect(() => {
     return "#17a2b8";
   }
 
+  // Detect if we're on mobile or desktop
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // ==================== RENDER ====================
   
-  return (
-    <div style={containerStyle}>
-      <div style={leftColumnStyle}>
-        <h3 style={{margin: "0 0 20px 0", color: "#333"}}>Life in Focus</h3>
-
-        <div style={compactRowStyle}>
-          <input 
-            style={taskInputStyle}
-            placeholder="Enter new task" 
-            value={inputValue} 
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && submit()}
-          />
-          
-          <button 
-            style={primaryButtonStyle}
-            onClick={submit}
-            disabled={!inputValue.trim()}
-          >
-            Add Task
-          </button>
-        </div>
-      </div>
-
+  const containerStyles = isMobile ? containerStyle : webContainerStyle;
+  const frameContent = (
+    <div style={isMobile ? {} : webFrameStyle}>
       <div style={rightColumnStyle}>
         <div style={{...sessionHeaderStyle, color: getSessionColor()}}>
           {sessionType === "work" ? "🍅 WORK SESSION" : 
@@ -466,6 +476,26 @@ React.useEffect(() => {
           <strong>Active Task:</strong><br />
           {task || "No task selected"}
         </div>
+        
+        {!task && (
+          <div style={compactRowStyle}>
+            <input 
+              style={taskInputStyle}
+              placeholder="Enter new task" 
+              value={inputValue} 
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && submit()}
+            />
+            
+            <button 
+              style={primaryButtonStyle}
+              onClick={submit}
+              disabled={!inputValue.trim()}
+            >
+              Add Task
+            </button>
+          </div>
+        )}
         
         <div style={{...timerDisplayStyle, color: getSessionColor()}}>
           {formatTime(count)}
@@ -596,6 +626,12 @@ React.useEffect(() => {
           </div>
         )}
       </div>
+    </div>
+  );
+  
+  return (
+    <div style={containerStyles}>
+      {isMobile ? frameContent : frameContent}
     </div>
   );
 }
