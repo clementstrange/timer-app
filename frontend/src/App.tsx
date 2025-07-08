@@ -330,21 +330,29 @@ React.useEffect(() => {
         <h1>{task ? task : "None"}</h1>
         <h1>{formatTime(count)}</h1>
         <div style={buttonGroupStyle}>
-          <button onClick={() => {
-            if (timerState === "stopped") {
-              start();
-            } else if (timerState === "running") {
-              pause();
-            } else if (timerState === "paused") {
-              start();
-            }
-          }}>
-            {timerState === "stopped" ? "Start" :
-              timerState === "running" ? "Pause" :
-                "Resume"}
-          </button>
-          <button onClick={reset}>Reset</button>
-        </div>
+  <button onClick={() => {
+    if (timerState === "stopped") {
+      start();
+    } else if (timerState === "running") {
+      pause();
+    } else if (timerState === "paused") {
+      start();
+    }
+  }}>
+    {timerState === "stopped" ? "Start" :
+      timerState === "running" ? "Pause" :
+        "Resume"}
+  </button>
+  
+  {sessionType === "work" ? (
+    <button onClick={reset}>Reset</button>
+  ) : (
+    <>
+      <button onClick={() => setCount(prev => prev + 5)}>+5 sec</button>
+      <button onClick={() => setCount(prev => Math.max(0, prev - 5))}>-5 sec</button>
+    </>
+  )}
+</div>
       </div>
     </div>
   );
