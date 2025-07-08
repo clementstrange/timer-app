@@ -33,19 +33,7 @@ const webFrameStyle = {
   boxShadow: "0 4px 20px rgba(0,0,0,0.15)"
 };
 
-const leftColumnStyle = { 
-  flex: 1,
-  display: "flex", 
-  flexDirection: "column" as const, 
-  alignItems: "center",
-  backgroundColor: "white",
-  borderRadius: "12px",
-  padding: "20px",
-  boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
-};
-
 const rightColumnStyle = { 
-  flex: 1,
   display: "flex", 
   flexDirection: "column" as const, 
   alignItems: "center",
@@ -459,180 +447,348 @@ function App() {
 
   // ==================== RENDER ====================
   
-  const containerStyles = isMobile ? containerStyle : webContainerStyle;
-  const frameContent = (
-    <div style={isMobile ? {} : webFrameStyle}>
-      <div style={rightColumnStyle}>
-        <div style={{...sessionHeaderStyle, color: getSessionColor()}}>
-          {sessionType === "work" ? "🍅 WORK SESSION" : 
-           sessionType === "break" ? "☕ BREAK TIME" : 
-           "🏖️ LONG BREAK"}
-        </div>
-        
-        <div style={sessionHeaderStyle}>
-          Pomodoros: {completedPomos}/4
-        </div>
-        
-        <div style={activeTaskStyle}>
-          <strong>Active Task:</strong><br />
-          {task || "No task selected"}
-        </div>
-        
-        {!task && (
-          <div style={compactRowStyle}>
-            <input 
-              style={taskInputStyle}
-              placeholder="Enter new task" 
-              value={inputValue} 
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && submit()}
-            />
-            
+  if (isMobile) {
+    return (
+      <div style={containerStyle}>
+        <div style={rightColumnStyle}>
+          <div style={{...sessionHeaderStyle, color: getSessionColor()}}>
+            {sessionType === "work" ? "🍅 WORK SESSION" : 
+             sessionType === "break" ? "☕ BREAK TIME" : 
+             "🏖️ LONG BREAK"}
+          </div>
+          
+          <div style={sessionHeaderStyle}>
+            Pomodoros: {completedPomos}/4
+          </div>
+          
+          <div style={activeTaskStyle}>
+            <strong>Active Task:</strong><br />
+            {task || "No task selected"}
+          </div>
+          
+          {!task && (
+            <div style={compactRowStyle}>
+              <input 
+                style={taskInputStyle}
+                placeholder="Enter new task" 
+                value={inputValue} 
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && submit()}
+              />
+              
+              <button 
+                style={primaryButtonStyle}
+                onClick={submit}
+                disabled={!inputValue.trim()}
+              >
+                Add Task
+              </button>
+            </div>
+          )}
+          
+          <div style={{...timerDisplayStyle, color: getSessionColor()}}>
+            {formatTime(count)}
+          </div>
+          
+          <div style={buttonGroupStyle}>
             <button 
               style={primaryButtonStyle}
-              onClick={submit}
-              disabled={!inputValue.trim()}
+              onClick={() => {
+                if (timerState === "stopped") {
+                  start();
+                } else if (timerState === "running") {
+                  pause();
+                } else if (timerState === "paused") {
+                  start();
+                }
+              }}
             >
-              Add Task
+              {timerState === "stopped" ? "Start" :
+                timerState === "running" ? "Pause" :
+                  "Resume"}
             </button>
-          </div>
-        )}
-        
-        <div style={{...timerDisplayStyle, color: getSessionColor()}}>
-          {formatTime(count)}
-        </div>
-        
-        <div style={buttonGroupStyle}>
-          <button 
-            style={primaryButtonStyle}
-            onClick={() => {
-              if (timerState === "stopped") {
-                start();
-              } else if (timerState === "running") {
-                pause();
-              } else if (timerState === "paused") {
-                start();
-              }
-            }}
-          >
-            {timerState === "stopped" ? "Start" :
-              timerState === "running" ? "Pause" :
-                "Resume"}
-          </button>
-          
-          {sessionType === "work" ? (
-            <button 
-              style={secondaryButtonStyle}
-              onClick={reset}
-            >
-              Finish
-            </button>
-          ) : (
-            <>
-              <button 
-                style={successButtonStyle}
-                onClick={() => setCount(prev => prev + 60)}
-              >
-                +1 min
-              </button> 
-              <button 
-                style={dangerButtonStyle}
-                onClick={() => setCount(prev => Math.max(0, prev - 60))}
-              >
-                -1 min
-              </button>
+            
+            {sessionType === "work" ? (
               <button 
                 style={secondaryButtonStyle}
-                onClick={() => {
-                  if (timerRef.current) {
-                    clearInterval(timerRef.current);
-                  }
-                  setTimerState("stopped");
-                  setSessionType("work");
-                }}
+                onClick={reset}
               >
-                Skip
+                Finish
               </button>
-            </>
+            ) : (
+              <>
+                <button 
+                  style={successButtonStyle}
+                  onClick={() => setCount(prev => prev + 60)}
+                >
+                  +1 min
+                </button> 
+                <button 
+                  style={dangerButtonStyle}
+                  onClick={() => setCount(prev => Math.max(0, prev - 60))}
+                >
+                  -1 min
+                </button>
+                <button 
+                  style={secondaryButtonStyle}
+                  onClick={() => {
+                    if (timerRef.current) {
+                      clearInterval(timerRef.current);
+                    }
+                    setTimerState("stopped");
+                    setSessionType("work");
+                  }}
+                >
+                  Skip
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div style={taskListStyle}>
+          <h4 style={{margin: "0 0 15px 0", color: "#333"}}>Recent Tasks</h4>
+          {completedTasks.length > 0 ? (
+            completedTasks.map((task, index) => (
+              <div key={index} style={taskItemStyle}>
+                {editingTaskId === task.task_id ? (
+                  <div style={editFormStyle}>
+                    <input
+                      style={inputStyle}
+                      placeholder="Task name"
+                      value={editTaskName}
+                      onChange={(e) => setEditTaskName(e.target.value)}
+                    />
+                    <div style={editInputRowStyle}>
+                      <input
+                        style={compactInputStyle}
+                        type="number"
+                        placeholder="Seconds"
+                        value={editTimeWorked}
+                        onChange={(e) => setEditTimeWorked(Number(e.target.value))}
+                      />
+                      <button 
+                        style={successButtonStyle}
+                        onClick={() => saveTask(task.task_id)}
+                      >
+                        Save
+                      </button>
+                      <button 
+                        style={secondaryButtonStyle}
+                        onClick={() => setEditingTaskId(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={taskItemContentStyle}>
+                    <div style={{flex: 1, minWidth: "120px"}}>
+                      <div style={{fontWeight: "bold", marginBottom: "4px"}}>
+                        {task.task_name}
+                      </div>
+                      <div style={{color: "#666", fontSize: "14px"}}>
+                        {formatTime(task.time_worked)}
+                      </div>
+                    </div>
+                    <div style={taskButtonsStyle}>
+                      <button 
+                        style={secondaryButtonStyle}
+                        onClick={() => editTask(task.task_id)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        style={dangerButtonStyle}
+                        onClick={() => deleteTask(task.task_id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
+              No tasks yet. Start a session to track your work!
+            </div>
           )}
         </div>
       </div>
+    );
+  }
 
-      <div style={taskListStyle}>
-        <h4 style={{margin: "0 0 15px 0", color: "#333"}}>Recent Tasks</h4>
-        {completedTasks.length > 0 ? (
-          completedTasks.map((task, index) => (
-            <div key={index} style={taskItemStyle}>
-              {editingTaskId === task.task_id ? (
-                <div style={editFormStyle}>
-                  <input
-                    style={inputStyle}
-                    placeholder="Task name"
-                    value={editTaskName}
-                    onChange={(e) => setEditTaskName(e.target.value)}
-                  />
-                  <div style={editInputRowStyle}>
-                    <input
-                      style={compactInputStyle}
-                      type="number"
-                      placeholder="Seconds"
-                      value={editTimeWorked}
-                      onChange={(e) => setEditTimeWorked(Number(e.target.value))}
-                    />
-                    <button 
-                      style={successButtonStyle}
-                      onClick={() => saveTask(task.task_id)}
-                    >
-                      Save
-                    </button>
-                    <button 
-                      style={secondaryButtonStyle}
-                      onClick={() => setEditingTaskId(null)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={taskItemContentStyle}>
-                  <div style={{flex: 1, minWidth: "120px"}}>
-                    <div style={{fontWeight: "bold", marginBottom: "4px"}}>
-                      {task.task_name}
-                    </div>
-                    <div style={{color: "#666", fontSize: "14px"}}>
-                      {formatTime(task.time_worked)}
-                    </div>
-                  </div>
-                  <div style={taskButtonsStyle}>
-                    <button 
-                      style={secondaryButtonStyle}
-                      onClick={() => editTask(task.task_id)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      style={dangerButtonStyle}
-                      onClick={() => deleteTask(task.task_id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))
-        ) : (
-          <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
-            No tasks yet. Start a session to track your work!
-          </div>
-        )}
-      </div>
-    </div>
-  );
-  
+  // Desktop version
   return (
-    <div style={containerStyles}>
-      {isMobile ? frameContent : frameContent}
+    <div style={webContainerStyle}>
+      <div style={webFrameStyle}>
+        <div style={rightColumnStyle}>
+          <div style={{...sessionHeaderStyle, color: getSessionColor()}}>
+            {sessionType === "work" ? "🍅 WORK SESSION" : 
+             sessionType === "break" ? "☕ BREAK TIME" : 
+             "🏖️ LONG BREAK"}
+          </div>
+          
+          <div style={sessionHeaderStyle}>
+            Pomodoros: {completedPomos}/4
+          </div>
+          
+          <div style={activeTaskStyle}>
+            <strong>Active Task:</strong><br />
+            {task || "No task selected"}
+          </div>
+          
+          {!task && (
+            <div style={compactRowStyle}>
+              <input 
+                style={taskInputStyle}
+                placeholder="Enter new task" 
+                value={inputValue} 
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && submit()}
+              />
+              
+              <button 
+                style={primaryButtonStyle}
+                onClick={submit}
+                disabled={!inputValue.trim()}
+              >
+                Add Task
+              </button>
+            </div>
+          )}
+          
+          <div style={{...timerDisplayStyle, color: getSessionColor()}}>
+            {formatTime(count)}
+          </div>
+          
+          <div style={buttonGroupStyle}>
+            <button 
+              style={primaryButtonStyle}
+              onClick={() => {
+                if (timerState === "stopped") {
+                  start();
+                } else if (timerState === "running") {
+                  pause();
+                } else if (timerState === "paused") {
+                  start();
+                }
+              }}
+            >
+              {timerState === "stopped" ? "Start" :
+                timerState === "running" ? "Pause" :
+                  "Resume"}
+            </button>
+            
+            {sessionType === "work" ? (
+              <button 
+                style={secondaryButtonStyle}
+                onClick={reset}
+              >
+                Finish
+              </button>
+            ) : (
+              <>
+                <button 
+                  style={successButtonStyle}
+                  onClick={() => setCount(prev => prev + 60)}
+                >
+                  +1 min
+                </button> 
+                <button 
+                  style={dangerButtonStyle}
+                  onClick={() => setCount(prev => Math.max(0, prev - 60))}
+                >
+                  -1 min
+                </button>
+                <button 
+                  style={secondaryButtonStyle}
+                  onClick={() => {
+                    if (timerRef.current) {
+                      clearInterval(timerRef.current);
+                    }
+                    setTimerState("stopped");
+                    setSessionType("work");
+                  }}
+                >
+                  Skip
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div style={taskListStyle}>
+          <h4 style={{margin: "0 0 15px 0", color: "#333"}}>Recent Tasks</h4>
+          {completedTasks.length > 0 ? (
+            completedTasks.map((task, index) => (
+              <div key={index} style={taskItemStyle}>
+                {editingTaskId === task.task_id ? (
+                  <div style={editFormStyle}>
+                    <input
+                      style={inputStyle}
+                      placeholder="Task name"
+                      value={editTaskName}
+                      onChange={(e) => setEditTaskName(e.target.value)}
+                    />
+                    <div style={editInputRowStyle}>
+                      <input
+                        style={compactInputStyle}
+                        type="number"
+                        placeholder="Seconds"
+                        value={editTimeWorked}
+                        onChange={(e) => setEditTimeWorked(Number(e.target.value))}
+                      />
+                      <button 
+                        style={successButtonStyle}
+                        onClick={() => saveTask(task.task_id)}
+                      >
+                        Save
+                      </button>
+                      <button 
+                        style={secondaryButtonStyle}
+                        onClick={() => setEditingTaskId(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={taskItemContentStyle}>
+                    <div style={{flex: 1, minWidth: "120px"}}>
+                      <div style={{fontWeight: "bold", marginBottom: "4px"}}>
+                        {task.task_name}
+                      </div>
+                      <div style={{color: "#666", fontSize: "14px"}}>
+                        {formatTime(task.time_worked)}
+                      </div>
+                    </div>
+                    <div style={taskButtonsStyle}>
+                      <button 
+                        style={secondaryButtonStyle}
+                        onClick={() => editTask(task.task_id)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        style={dangerButtonStyle}
+                        onClick={() => deleteTask(task.task_id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
+              No tasks yet. Start a session to track your work!
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
