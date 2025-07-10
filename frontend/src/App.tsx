@@ -64,7 +64,7 @@ const mobileTaskListStyle = {
   flexDirection: "column" as const, 
   alignItems: "stretch", 
   gap: "12px", 
-  width: "100%", 
+  width: "80%", 
   maxHeight: "400px",
   overflowY: "auto" as const,
   backgroundColor: "white",
