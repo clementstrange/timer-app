@@ -44,12 +44,27 @@ const rightColumnStyle = {
   minHeight: "400px"
 };
 
+
 const taskListStyle = { 
   display: "flex", 
   flexDirection: "column" as const, 
   alignItems: "stretch", 
   gap: "12px", 
   width: "93.5%", 
+  maxHeight: "400px",
+  overflowY: "auto" as const,
+  backgroundColor: "white",
+  borderRadius: "12px",
+  padding: "20px",
+  boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
+};
+
+const mobileTaskListStyle = { 
+  display: "flex", 
+  flexDirection: "column" as const, 
+  alignItems: "stretch", 
+  gap: "12px", 
+  width: "100%", 
   maxHeight: "400px",
   overflowY: "auto" as const,
   backgroundColor: "white",
@@ -546,7 +561,7 @@ function App() {
           </div>
         </div>
 
-        <div style={taskListStyle}>
+        <div style={mobileTaskListStyle}>
           <h4 style={{margin: "0 0 15px 0", color: "#333"}}>Recent Tasks</h4>
           {completedTasks.length > 0 ? (
             completedTasks.map((task, index) => (
@@ -611,7 +626,7 @@ function App() {
             ))
           ) : (
             <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
-              No tasks yet. Start a session to track your work!
+              No tasks yet.
             </div>
           )}
         </div>
