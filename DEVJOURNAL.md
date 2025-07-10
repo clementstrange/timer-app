@@ -1,3 +1,10 @@
+# Development Journal - 10 July 2025
+
+x Fixed the annoying window stretch issue due to CSS
+x Created a localhost version of the app that allows me to check the UI quicker than the production version
+x Decided that I will be building the user auth next and will remove the add task button. 
+
+
 # Development Journal - 8 July 2025
 ✅ What Was Done Today (Long Break Session!):
 
