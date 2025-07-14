@@ -1,8 +1,15 @@
+# Development Journal - 14 July 2025
+
+[] Remove the add task button
+[] Finish does not reset the task input and does not reset the timer
+[] Start supabase auth
+
 # Development Journal - 10 July 2025
 
 x Fixed the annoying window stretch issue due to CSS
 x Created a localhost version of the app that allows me to check the UI quicker than the production version
 x Decided that I will be building the user auth next and will remove the add task button. 
+x Found a new Bug. Finish does not reset the task input option and does not reset the timer!
 
 
 # Development Journal - 8 July 2025

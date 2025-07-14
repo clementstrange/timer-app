@@ -356,8 +356,7 @@ function App() {
     timerRef.current = null;
     fetchTasks();
     setTimerState("stopped");
-    setSessionType("work");
-    setCompletedPomos(0); 
+    setSessionType("break"); 
   }
 
   // ==================== TASK MANAGEMENT ====================
