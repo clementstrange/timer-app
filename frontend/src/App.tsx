@@ -493,16 +493,16 @@ function App() {
                 placeholder="Enter new task" 
                 value={inputValue} 
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && submit()}
+                onKeyDown={(e) => e.key === 'Enter' && submit()} 
               />
               
-              <button 
+              {/* <button 
                 style={primaryButtonStyle}
                 onClick={submit}
                 disabled={!inputValue.trim()}
               >
                 Add Task
-              </button>
+              </button> */}
             </div>
           )}
           
