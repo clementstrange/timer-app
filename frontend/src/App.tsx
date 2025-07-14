@@ -704,7 +704,7 @@ function App() {
       "Resume"}
 </button>
             
-            {sessionType === "work" ? (
+            {sessionType === "work" && (timerState === "running" || timerState === "paused") ? (
               <button 
                 style={secondaryButtonStyle}
                 onClick={reset}
