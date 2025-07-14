@@ -669,13 +669,13 @@ function App() {
                 onKeyPress={(e) => e.key === 'Enter' && submit()}
               />
               
-              <button 
+              {/* <button 
                 style={primaryButtonStyle}
                 onClick={submit}
                 disabled={!inputValue.trim()}
               >
                 Add Task
-              </button>
+              </button> */}
             </div>
           )}
           
