@@ -656,7 +656,7 @@ function App() {
           
           <div style={activeTaskStyle}>
             <strong>Active Task:</strong><br />
-            {task || "No task selected"}
+            {task || "Work Session"}
           </div>
           
           {!task && (
