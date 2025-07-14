@@ -361,14 +361,20 @@ function App() {
 
   // ==================== TASK MANAGEMENT ====================
   
-  function submit() {
-    if (inputValue.trim()) {
+  // function submit() {
+  //   if (inputValue.trim()) {
+  //     saveWorkSession();
+  //     setTask(inputValue);
+  //     currentTaskRef.current = inputValue;
+  //     setInputValue("");
+  //   }
+  // }
+    function submit() {
       saveWorkSession();
-      setTask(inputValue);
-      currentTaskRef.current = inputValue;
-      setInputValue("");
-    }
-  }
+      setTask(inputValue.trim() ? inputValue : "Work Session");
+      currentTaskRef.current = inputValue.trim() ? inputValue : "Work Session";
+      setInputValue(""); // Clear the input
+}
 
   function formatTime(seconds: number) {
     const minutes = Math.floor(seconds / 60);
@@ -679,21 +685,24 @@ function App() {
           
           <div style={buttonGroupStyle}>
             <button 
-              style={primaryButtonStyle}
-              onClick={() => {
-                if (timerState === "stopped") {
-                  start();
-                } else if (timerState === "running") {
-                  pause();
-                } else if (timerState === "paused") {
-                  start();
-                }
-              }}
-            >
-              {timerState === "stopped" ? "Start" :
-                timerState === "running" ? "Pause" :
-                  "Resume"}
-            </button>
+  style={primaryButtonStyle}
+  onClick={() => {
+    if (timerState === "stopped") {
+      if (!task) {
+        submit(); // Set the task first (either inputValue or "Work Session")
+      }
+      start(); // Then start the timer
+    } else if (timerState === "running") {
+      pause();
+    } else if (timerState === "paused") {
+      start();
+    }
+  }}
+>
+  {timerState === "stopped" ? "Start" :
+    timerState === "running" ? "Pause" :
+      "Resume"}
+</button>
             
             {sessionType === "work" ? (
               <button 
