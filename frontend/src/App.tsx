@@ -355,7 +355,7 @@ function App() {
     
     timerRef.current = null;
     fetchTasks();
-    setTimerState("stopped");
+    // setTimerState("stopped");
     setSessionType("break"); 
   }
 
