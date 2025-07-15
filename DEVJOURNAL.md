@@ -3,7 +3,9 @@
 [x] Remove the add task button
 [x] Finish does not reset the task input and does not reset the timer
 [x] Start supabase auth
-Supabase needs work
+
+Supabase needs work, but hey, got the first entry done! Seems like each button now needs work, but that's alright. 
+
 # Development Journal - 14 July 2025
 
 [x] Remove the add task button
