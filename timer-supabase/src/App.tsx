@@ -422,8 +422,8 @@ React.useEffect(() => {
       .insert([
         { 
           task_name: taskName, 
-          time_worked: timeWorked,
-          user_id: '00000000-0000-0000-0000-000000000000' // Proper UUID format
+          time_worked: timeWorked
+          // No user_id field - will be null
         }
       ]);
     
@@ -431,11 +431,11 @@ React.useEffect(() => {
     hasStartedRef.current = false;
   }
 }
-  function fetchTasks() {
+
+function fetchTasks() {
   supabase
     .from('tasks')
     .select('*')
-    .eq('user_id', '00000000-0000-0000-0000-000000000000') // Same UUID here
     .order('created_at', { ascending: false })
     .then(({ data, error }) => {
       if (error) {

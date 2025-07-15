@@ -1,3 +1,9 @@
+# Development Journal - 15 July 2025
+
+[x] Remove the add task button
+[x] Finish does not reset the task input and does not reset the timer
+[x] Start supabase auth
+Supabase needs work
 # Development Journal - 14 July 2025
 
 [x] Remove the add task button
