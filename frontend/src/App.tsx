@@ -228,6 +228,7 @@ function App() {
   const currentTaskRef = useRef("");
   const hasStartedRef = useRef(false);
   const currentSessionTypeRef = useRef("work");
+  const prevTimerStateRef = useRef(timerState);
   
   // Detect if we're on mobile or desktop
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -312,11 +313,13 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  React.useEffect(() => {
-    if (timerState === "stopped" && task) {
-      setInputValue(task);
-    }
-  }, [timerState, task]);
+  // When timer stops, populate input with current task (only on state transition)
+React.useEffect(() => {
+  if (timerState === "stopped" && prevTimerStateRef.current !== "stopped" && task) {
+    setInputValue(task);
+  }
+  prevTimerStateRef.current = timerState;
+}, [timerState, task]);
   // ==================== TIMER LOGIC ====================
   
   function start() {
