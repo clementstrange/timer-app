@@ -435,7 +435,7 @@ React.useEffect(() => {
   supabase
     .from('tasks')
     .select('*')
-    .eq('user_id', 'temp-user-id') // We'll fix this with auth later
+    .eq('user_id', '00000000-0000-0000-0000-000000000000') // Same UUID here
     .order('created_at', { ascending: false })
     .then(({ data, error }) => {
       if (error) {
