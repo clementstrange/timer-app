@@ -311,7 +311,12 @@ function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
+  
+  React.useEffect(() => {
+    if (timerState === "stopped" && task) {
+      setInputValue(task);
+    }
+  }, [timerState, task]);
   // ==================== TIMER LOGIC ====================
   
   function start() {
@@ -494,17 +499,17 @@ function App() {
     </div>
   );
 
-  const taskInput = !task && (
-    <div style={compactRowStyle}>
-      <input 
-        style={taskInputStyle}
-        placeholder="Enter new task" 
-        value={inputValue} 
-        onChange={(e) => setInputValue(e.target.value)}
-        onKeyDown={handleTaskInput}
-      />
-    </div>
-  );
+  const taskInput = timerState === "stopped" && (
+  <div style={compactRowStyle}>
+    <input 
+      style={taskInputStyle}
+      placeholder="Enter new task" 
+      value={inputValue} 
+      onChange={(e) => setInputValue(e.target.value)}
+      onKeyDown={handleTaskInput}
+    />
+  </div>
+);
 
   const timerDisplay = (
     <div style={{...timerDisplayStyle, color: getSessionColor()}}>
