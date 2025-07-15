@@ -1,5 +1,6 @@
 import React from 'react';
 import { useState, useRef } from 'react';
+import { supabase } from './supabase';
 
 // #region Component Styles
 const containerStyle = { 
@@ -412,29 +413,39 @@ React.useEffect(() => {
 
   // #region API Calls
   async function saveWorkSession() {
-    const timeWorked = getSessionDuration(sessionType) - count;
-    const taskName = currentTaskRef.current;
+  const timeWorked = getSessionDuration(sessionType) - count;
+  const taskName = currentTaskRef.current;
 
-    if (taskName && hasStartedRef.current && timeWorked > 0) {
-      await fetch(`${API_BASE_URL}/task`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ task: taskName, time: timeWorked })
-      });
-      hasStartedRef.current = false;
-    }
+  if (taskName && hasStartedRef.current && timeWorked > 0) {
+    const { error } = await supabase
+      .from('tasks')
+      .insert([
+        { 
+          task_name: taskName, 
+          time_worked: timeWorked,
+          user_id: 'temp-user-id' // We'll fix this with auth later
+        }
+      ]);
+    
+    if (error) console.error('Error saving task:', error);
+    hasStartedRef.current = false;
   }
+}
 
   function fetchTasks() {
-    fetch(`${API_BASE_URL}/latest-session`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" }
-    })
-      .then(response => response.json())
-      .then(data => {
-        setCompletedTasks(data);
-      });
-  }
+  supabase
+    .from('tasks')
+    .select('*')
+    .eq('user_id', 'temp-user-id') // We'll fix this with auth later
+    .order('created_at', { ascending: false })
+    .then(({ data, error }) => {
+      if (error) {
+        console.error('Error fetching tasks:', error);
+      } else {
+        setCompletedTasks(data || []);
+      }
+    });
+}
   // #endregion
 
   // ==================== TASK EDITING ====================
