@@ -492,12 +492,12 @@ function App() {
     </div>
   );
 
-  const activeTaskDisplay = (
-    <div style={activeTaskStyle}>
-      <strong>Active Task:</strong><br />
-      {task || "No task selected"}
-    </div>
-  );
+  const activeTaskDisplay = timerState !== "stopped" && (
+  <div style={activeTaskStyle}>
+    <strong>Active Task:</strong><br />
+    {task || "Work Session"}
+  </div>
+);
 
   const taskInput = timerState === "stopped" && (
   <div style={compactRowStyle}>
