@@ -5,6 +5,14 @@
 [] Start supabase auth
 
 Need to check next time if these work properly. Did not start Supabase yet. 
+
+# Development Journal - 14 July 2025
+
+[x] Remove the add task button
+[x] Finish does not reset the task input and does not reset the timer
+[] Start supabase auth
+
+Need to check next time if these work properly. Did not start Supabase yet. 
 # Development Journal - 10 July 2025
 
 x Fixed the annoying window stretch issue due to CSS
