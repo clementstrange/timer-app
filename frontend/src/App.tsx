@@ -390,6 +390,7 @@ function App() {
   const handleTaskInput = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       submit();
+      start(); 
     }
   };
 
