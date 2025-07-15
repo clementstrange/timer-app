@@ -417,13 +417,13 @@ React.useEffect(() => {
   const taskName = currentTaskRef.current;
 
   if (taskName && hasStartedRef.current && timeWorked > 0) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .insert([
         { 
           task_name: taskName, 
           time_worked: timeWorked,
-          user_id: 'temp-user-id' // We'll fix this with auth later
+          user_id: '00000000-0000-0000-0000-000000000000' // Proper UUID format
         }
       ]);
     
@@ -431,7 +431,6 @@ React.useEffect(() => {
     hasStartedRef.current = false;
   }
 }
-
   function fetchTasks() {
   supabase
     .from('tasks')
