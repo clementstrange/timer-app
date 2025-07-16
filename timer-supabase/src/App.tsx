@@ -234,6 +234,8 @@ function App() {
 
   // Detect login state
   const [user, setUser] = useState(null);
+  console.log('Current user state:', user);
+
   // #endregion
 
   // ==================== LIFECYCLE EFFECTS ====================
@@ -430,6 +432,8 @@ React.useEffect(() => {
   async function saveWorkSession() {
   const timeWorked = getSessionDuration(sessionType) - count;
   const taskName = currentTaskRef.current;
+
+  console.log('User state in saveWorkSession:', user); // Add this line
 
   if (taskName && hasStartedRef.current && timeWorked > 0) {
     if (user) {
