@@ -432,12 +432,17 @@ React.useEffect(() => {
   async function saveWorkSession() {
   const timeWorked = getSessionDuration(sessionType) - count;
   const taskName = currentTaskRef.current;
-
-  console.log('User state in saveWorkSession:', user); // Add this line
+  console.log('saveWorkSession called');
+  console.log('taskName:', taskName);
+  console.log('hasStartedRef.current:', hasStartedRef.current);
+  console.log('timeWorked:', timeWorked);
+  console.log('User state in saveWorkSession:', user);
 
   if (taskName && hasStartedRef.current && timeWorked > 0) {
     if (user) {
       // Your existing Supabase code
+      console.log('Using Supabase');
+
       const { data, error } = await supabase
         .from('tasks')
         .insert([
@@ -449,6 +454,8 @@ React.useEffect(() => {
       
       if (error) console.error('Error saving task:', error);
     } else {
+      console.log('Using localStorage');
+
       // localStorage code
       const existingTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
       const newTask = { 
