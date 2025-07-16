@@ -1,3 +1,12 @@
+# Development Journal - 16 July 2025
+
+[x] Created the localhost version before full auth integration
+[x]Fixed database authentication bugs - Resolved delete button functionality by migrating from old API endpoints to Supabase client methods with proper .eq() syntax
+[x]Implemented guest user localStorage system - Built complete CRUD operations (create, read, update, delete) for tasks using browser localStorage with JSON serialization
+[x]Added authentication state management - Integrated Supabase auth checking with React state to detect logged-in vs guest users throughout the app
+[x]Created dual-mode data persistence - Implemented if/else logic in all database functions to route to localStorage for guests and Supabase for authenticated users
+[x]Resolved TypeScript deployment errors - Fixed type annotations for user state and localStorage operations to successfully deploy to Vercel
+
 # Development Journal - 15 July 2025
 
 [x] Remove the add task button
