@@ -197,8 +197,6 @@ const compactInputStyle = {
 };
 // #endregion
 
-const API_BASE_URL = "https://believable-courage-production.up.railway.app";
-
 function App() {
   function getSessionDuration(type: any) {
     if (type === "work") return 25;
@@ -233,9 +231,26 @@ function App() {
   
   // Detect if we're on mobile or desktop
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Detect login state
+  const [user, setUser] = useState(null);
   // #endregion
 
   // ==================== LIFECYCLE EFFECTS ====================
+  
+  React.useEffect(() => {
+  // Check if user is already logged in
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setUser(session?.user ?? null);
+  });
+
+  // Listen for auth changes (login/logout)
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    setUser(session?.user ?? null);
+  });
+
+  return () => subscription.unsubscribe();
+}, []);
   
   // Initial data fetch
   React.useEffect(() => {
@@ -417,33 +432,53 @@ React.useEffect(() => {
   const taskName = currentTaskRef.current;
 
   if (taskName && hasStartedRef.current && timeWorked > 0) {
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert([
-        { 
-          task_name: taskName, 
-          time_worked: timeWorked
-          // No user_id field - will be null
-        }
-      ]);
+    if (user) {
+      // Your existing Supabase code
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([
+          { 
+            task_name: taskName, 
+            time_worked: timeWorked
+          }
+        ]);
+      
+      if (error) console.error('Error saving task:', error);
+    } else {
+      // localStorage code
+      const existingTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+      const newTask = { 
+        id: Date.now(), // simple ID for localStorage
+        task_name: taskName, 
+        time_worked: timeWorked,
+        created_at: new Date().toISOString()
+      };
+      existingTasks.push(newTask);
+      localStorage.setItem('tasks', JSON.stringify(existingTasks));
+    }
     
-    if (error) console.error('Error saving task:', error);
     hasStartedRef.current = false;
   }
 }
-
 function fetchTasks() {
-  supabase
-    .from('tasks')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .then(({ data, error }) => {
-      if (error) {
-        console.error('Error fetching tasks:', error);
-      } else {
-        setCompletedTasks(data || []);
-      }
-    });
+  if (user) {
+    // Your existing Supabase code
+    supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Error fetching tasks:', error);
+        } else {
+          setCompletedTasks(data || []);
+        }
+      });
+  } else {
+    // localStorage code
+    const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    setCompletedTasks(tasks);
+  }
 }
   // #endregion
 
@@ -460,25 +495,48 @@ function fetchTasks() {
   }
 
   function saveTask(task_id: number) {
-  supabase
-    .from('tasks')
-    .update({
-      task_name: editTaskName,
-      time_worked: editTimeWorked
-    })
-    .eq('id', task_id)
-    .then(() => {
-      setEditingTaskId(null);
-      fetchTasks();
-    });
+  if (user) {
+    // Supabase code
+    supabase
+      .from('tasks')
+      .update({
+        task_name: editTaskName,
+        time_worked: editTimeWorked
+      })
+      .eq('id', task_id)
+      .then(() => {
+        setEditingTaskId(null);
+        fetchTasks();
+      });
+  } else {
+    // localStorage code
+    const existingTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const updatedTasks = existingTasks.map(task => 
+      task.id === task_id 
+        ? { ...task, task_name: editTaskName, time_worked: editTimeWorked }
+        : task
+    );
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    setEditingTaskId(null);
+    fetchTasks();
+  }
 }
 
-  function deleteTask(task_id: number) {
-  supabase
-    .from('tasks')
-    .delete()
-    .eq('id', task_id)
-    .then(() => fetchTasks());
+function deleteTask(task_id: number) {
+  if (user) {
+    // Supabase code
+    supabase
+      .from('tasks')
+      .delete()
+      .eq('id', task_id)
+      .then(() => fetchTasks());
+  } else {
+    // localStorage code
+    const existingTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const updatedTasks = existingTasks.filter(task => task.id !== task_id);
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    fetchTasks(); // Refresh the UI
+  }
 }
 
   // Get session type color
