@@ -452,7 +452,7 @@ function fetchTasks() {
   function editTask(task_id: number) {
     setEditingTaskId(task_id);
     
-    const taskToEdit = completedTasks.find(task => task.task_id === task_id);
+    const taskToEdit = completedTasks.find(task => task.id === task_id);
     if (taskToEdit) {
       setEditTaskName(taskToEdit.task_name);
       setEditTimeWorked(taskToEdit.time_worked);
@@ -460,27 +460,26 @@ function fetchTasks() {
   }
 
   function saveTask(task_id: number) {
-    fetch(`${API_BASE_URL}/task/${task_id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        task_name: editTaskName,
-        time_worked: editTimeWorked
-      })
+  supabase
+    .from('tasks')
+    .update({
+      task_name: editTaskName,
+      time_worked: editTimeWorked
     })
-      .then(() => {
-        setEditingTaskId(null);
-        fetchTasks();
-      });
-  }
+    .eq('id', task_id)
+    .then(() => {
+      setEditingTaskId(null);
+      fetchTasks();
+    });
+}
 
   function deleteTask(task_id: number) {
-    fetch(`${API_BASE_URL}/task/${task_id}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" }
-    })
-      .then(() => fetchTasks());
-  }
+  supabase
+    .from('tasks')
+    .delete()
+    .eq('id', task_id)
+    .then(() => fetchTasks());
+}
 
   // Get session type color
   function getSessionColor() {
@@ -579,7 +578,7 @@ function fetchTasks() {
       {completedTasks.length > 0 ? (
         completedTasks.map((task, index) => (
           <div key={index} style={taskItemStyle}>
-            {editingTaskId === task.task_id ? (
+            {editingTaskId === task.id ? (
               <div style={editFormStyle}>
                 <input
                   style={inputStyle}
@@ -597,7 +596,7 @@ function fetchTasks() {
                   />
                   <button 
                     style={successButtonStyle}
-                    onClick={() => saveTask(task.task_id)}
+                    onClick={() => saveTask(task.id)}
                   >
                     Save
                   </button>
@@ -622,13 +621,13 @@ function fetchTasks() {
                 <div style={taskButtonsStyle}>
                   <button 
                     style={secondaryButtonStyle}
-                    onClick={() => editTask(task.task_id)}
+                    onClick={() => editTask(task.id)}
                   >
                     Edit
                   </button>
                   <button 
                     style={dangerButtonStyle}
-                    onClick={() => deleteTask(task.task_id)}
+                    onClick={() => deleteTask(task.id)}
                   >
                     Delete
                   </button>
