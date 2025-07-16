@@ -233,7 +233,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // Detect login state
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   console.log('Current user state:', user);
 
   // #endregion
@@ -514,7 +514,7 @@ function fetchTasks() {
       });
   } else {
     // localStorage code
-    const existingTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const existingTasks: any[] = JSON.parse(localStorage.getItem('tasks') || '[]');
     const updatedTasks = existingTasks.map(task => 
       task.id === task_id 
         ? { ...task, task_name: editTaskName, time_worked: editTimeWorked }
@@ -536,7 +536,7 @@ function deleteTask(task_id: number) {
       .then(() => fetchTasks());
   } else {
     // localStorage code
-    const existingTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const existingTasks: any[] = JSON.parse(localStorage.getItem('tasks') || '[]');
     const updatedTasks = existingTasks.filter(task => task.id !== task_id);
     localStorage.setItem('tasks', JSON.stringify(updatedTasks));
     fetchTasks(); // Refresh the UI
