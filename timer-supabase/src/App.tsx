@@ -195,6 +195,55 @@ const compactInputStyle = {
   width: "80px",
   padding: "8px"
 };
+
+// Login/Logout styles
+
+const authButtonStyle = {
+  position: "absolute" as const,
+  top: "20px",
+  left: "20px",
+  zIndex: 1000,
+  ...primaryButtonStyle
+};
+
+const modalOverlayStyle = {
+  position: "fixed" as const,
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  backgroundColor: "rgba(0,0,0,0.5)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 2000
+};
+
+const modalStyle = {
+  backgroundColor: "white",
+  padding: "30px",
+  borderRadius: "12px",
+  width: "90%",
+  maxWidth: "400px",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
+};
+
+const modalFormStyle = {
+  display: "flex",
+  flexDirection: "column" as const,
+  gap: "15px"
+};
+
+const userDisplayStyle = {
+  position: "absolute" as const,
+  top: "20px",
+  left: "120px",
+  color: "#333",
+  fontSize: "14px",
+  fontWeight: "bold"
+};
+
+
 // #endregion
 
 function App() {
@@ -235,6 +284,13 @@ function App() {
   // Detect login state
   const [user, setUser] = useState<any>(null);
   console.log('Current user state:', user);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authForm, setAuthForm] = useState({
+  name: '',
+  email: '',
+  password: ''
+  });
+  const [isSignUp, setIsSignUp] = useState(false);
 
   // #endregion
 
@@ -499,6 +555,45 @@ function fetchTasks() {
     setCompletedTasks(tasks);
   }
 }
+
+async function signUp() {
+  const { error } = await supabase.auth.signUp({
+    email: authForm.email,
+    password: authForm.password,
+    options: {
+      data: {
+        name: authForm.name
+      }
+    }
+  });
+  
+  if (error) {
+    console.error('Sign up error:', error);
+  } else {
+    setShowAuthModal(false);
+    setAuthForm({ name: '', email: '', password: '' });
+  }
+}
+
+async function signIn() {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: authForm.email,
+    password: authForm.password
+  });
+  
+  if (error) {
+    console.error('Sign in error:', error);
+  } else {
+    setShowAuthModal(false);
+    setAuthForm({ name: '', email: '', password: '' });
+  }
+}
+
+async function signOut() {
+  await supabase.auth.signOut();
+}
+
+
   // #endregion
 
   // ==================== TASK EDITING ====================
@@ -733,36 +828,106 @@ async function migrateLocalStorageToSupabase() {
   );
 
   // ==================== RENDER ====================
-  
-  const timerSection = (
-    <div style={rightColumnStyle}>
-      {sessionHeader}
-      {pomodoroCounter}
-      {activeTaskDisplay}
-      {taskInput}
-      {timerDisplay}
-      {buttonGroup}
-    </div>
-  );
-
-  if (isMobile) {
-    return (
-      <div style={containerStyle}>
-        {timerSection}
-        {taskList}
+const authSection = (
+  <>
+    {!user ? (
+      <button 
+        style={authButtonStyle}
+        onClick={() => setShowAuthModal(true)}
+      >
+        Log in
+      </button>
+    ) : (
+      <>
+        <button 
+          style={authButtonStyle}
+          onClick={signOut}
+        >
+          Log out
+        </button>
+        <div style={userDisplayStyle}>
+          {user.user_metadata?.name || user.email}
+        </div>
+      </>
+    )}
+    
+    {showAuthModal && (
+      <div style={modalOverlayStyle} onClick={() => setShowAuthModal(false)}>
+        <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+          <h3>{isSignUp ? 'Sign Up' : 'Sign In'}</h3>
+          <div style={modalFormStyle}>
+            {isSignUp && (
+              <input
+                style={inputStyle}
+                placeholder="Name"
+                value={authForm.name}
+                onChange={(e) => setAuthForm({...authForm, name: e.target.value})}
+              />
+            )}
+            <input
+              style={inputStyle}
+              placeholder="Email"
+              type="email"
+              value={authForm.email}
+              onChange={(e) => setAuthForm({...authForm, email: e.target.value})}
+            />
+            <input
+              style={inputStyle}
+              placeholder="Password"
+              type="password"
+              value={authForm.password}
+              onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
+            />
+            <button 
+              style={primaryButtonStyle}
+              onClick={isSignUp ? signUp : signIn}
+            >
+              {isSignUp ? 'Sign Up' : 'Sign In'}
+            </button>
+            <button 
+              style={secondaryButtonStyle}
+              onClick={() => setIsSignUp(!isSignUp)}
+            >
+              {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+            </button>
+          </div>
+        </div>
       </div>
-    );
-  }
+    )}
+  </>
+);
 
-  // Desktop version
+const timerSection = (
+  <div style={rightColumnStyle}>
+    {sessionHeader}
+    {pomodoroCounter}
+    {activeTaskDisplay}
+    {taskInput}
+    {timerDisplay}
+    {buttonGroup}
+  </div>
+);
+
+if (isMobile) {
   return (
-    <div style={webContainerStyle}>
-      <div style={webFrameStyle}>
-        {timerSection}
-        {taskList}
-      </div>
+    <div style={containerStyle}>
+      {authSection}
+      {timerSection}
+      {taskList}
     </div>
   );
+}
+
+// Desktop version
+return (
+  <div style={webContainerStyle}>
+    {authSection}
+    <div style={webFrameStyle}>
+      {timerSection}
+      {taskList}
+    </div>
+  </div>
+);
 }
 
 export default App;
