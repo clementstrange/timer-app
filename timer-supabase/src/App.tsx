@@ -504,20 +504,29 @@ React.useEffect(() => {
 
   if (taskName && hasStartedRef.current && timeWorked > 0) {
     if (user) {
-      // Your existing Supabase code
-      console.log('Using Supabase');
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert([
-          { 
-            task_name: taskName, 
-            time_worked: timeWorked
-          }
-        ]);
-      
-      if (error) console.error('Error saving task:', error);
-    } else {
+  console.log('=== SUPABASE SAVE DEBUG ===');
+  console.log('User object:', user);
+  console.log('User ID:', user?.id);
+  console.log('Task name:', taskName);
+  console.log('Time worked:', timeWorked);
+  console.log('hasStartedRef.current:', hasStartedRef.current);
+  
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert([
+      {
+        task_name: taskName,
+        time_worked: timeWorked,
+        user_id: user.id
+      }
+    ]);
+  
+  console.log('Insert response - data:', data);
+  console.log('Insert response - error:', error);
+  console.log('=== END DEBUG ===');
+  
+  if (error) console.error('Error saving task:', error);
+} else {
       console.log('Using localStorage');
 
       // localStorage code
