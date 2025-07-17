@@ -241,23 +241,31 @@ function App() {
   // ==================== LIFECYCLE EFFECTS ====================
   
   React.useEffect(() => {
-  // Check if user is already logged in
   supabase.auth.getSession().then(({ data: { session } }) => {
     setUser(session?.user ?? null);
+    fetchTasks(); // Fetch after auth state is set
   });
 
-  // Listen for auth changes (login/logout)
   const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const wasLoggedOut = !user;
+    const isNowLoggedIn = session?.user;
+    
+
+  if (hasStartedRef.current) {
+    saveWorkSession();
+  }
+  
     setUser(session?.user ?? null);
+    
+    if (wasLoggedOut && isNowLoggedIn) {
+      migrateLocalStorageToSupabase().then(() => fetchTasks());
+    } else {
+      fetchTasks();
+    }
   });
 
   return () => subscription.unsubscribe();
 }, []);
-  
-  // Initial data fetch
-  React.useEffect(() => {
-    fetchTasks();
-  }, []);
   
   // Add this useEffect to show timer in title
   React.useEffect(() => {
@@ -447,6 +455,7 @@ React.useEffect(() => {
         .from('tasks')
         .insert([
           { 
+            id: Date.now(),
             task_name: taskName, 
             time_worked: timeWorked
           }
@@ -549,7 +558,18 @@ function deleteTask(task_id: number) {
     fetchTasks(); // Refresh the UI
   }
 }
-
+async function migrateLocalStorageToSupabase() {
+  const localTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  if (localTasks.length > 0) {
+    const { error } = await supabase
+      .from('tasks')
+      .insert(localTasks);
+    
+    if (!error) {
+      localStorage.removeItem('tasks'); // Clear after successful migration
+    }
+  }
+}
   // Get session type color
   function getSessionColor() {
     if (sessionType === "work") return "#007bff";

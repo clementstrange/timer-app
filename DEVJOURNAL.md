@@ -1,3 +1,11 @@
+# Development Journal - 17 July 2025
+
+[] Make progress on the full auth
+[] Turn off RLS on Supabase
+[]
+[]
+
+
 # Development Journal - 16 July 2025
 
 [x] Created the localhost version before full auth integration
@@ -6,6 +14,12 @@
 [x]Added authentication state management - Integrated Supabase auth checking with React state to detect logged-in vs guest users throughout the app
 [x]Created dual-mode data persistence - Implemented if/else logic in all database functions to route to localStorage for guests and Supabase for authenticated users
 [x]Resolved TypeScript deployment errors - Fixed type annotations for user state and localStorage operations to successfully deploy to Vercel
+
+
+Next time we're building the next stage - full supabase integration. 
+
+
+
 
 # Development Journal - 15 July 2025
 
