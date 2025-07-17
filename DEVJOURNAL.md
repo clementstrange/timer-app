@@ -1,9 +1,9 @@
 # Development Journal - 17 July 2025
 
-[] Make progress on the full auth
-[] Turn off RLS on Supabase
-[]
-[]
+[x] Make progress on the full auth
+[x] Turn off RLS on Supabase
+
+Sent the first full-auth message to backend!
 
 
 # Development Journal - 16 July 2025

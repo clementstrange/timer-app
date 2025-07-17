@@ -504,12 +504,11 @@ React.useEffect(() => {
 
   if (taskName && hasStartedRef.current && timeWorked > 0) {
     if (user) {
-  console.log('=== SUPABASE SAVE DEBUG ===');
-  console.log('User object:', user);
-  console.log('User ID:', user?.id);
-  console.log('Task name:', taskName);
-  console.log('Time worked:', timeWorked);
-  console.log('hasStartedRef.current:', hasStartedRef.current);
+  // Test what Supabase thinks the current user is
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+  console.log('React user.id:', user.id);
+  console.log('Supabase user.id:', currentUser?.id);
+  console.log('Are they equal?', user.id === currentUser?.id);
   
   const { data, error } = await supabase
     .from('tasks')
