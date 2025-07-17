@@ -455,7 +455,6 @@ React.useEffect(() => {
         .from('tasks')
         .insert([
           { 
-            id: Date.now(),
             task_name: taskName, 
             time_worked: timeWorked
           }
