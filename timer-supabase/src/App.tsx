@@ -91,7 +91,8 @@ const buttonGroupStyle = {
 };
 
 const inputStyle = {
-  width: "100%",
+  width: "auto", // Changed from "100%"
+  flex: 1,       // Added this to fill available space
   padding: "12px",
   fontSize: "16px",
   borderRadius: "8px",
