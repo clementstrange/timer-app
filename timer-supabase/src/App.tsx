@@ -199,13 +199,6 @@ const compactInputStyle = {
 
 // Login/Logout styles
 
-const authButtonStyle = {
-  position: "absolute" as const,
-  top: "20px",
-  left: "20px",
-  zIndex: 1000,
-  ...primaryButtonStyle
-};
 
 const modalOverlayStyle = {
   position: "fixed" as const,
@@ -235,21 +228,6 @@ const modalFormStyle = {
   gap: "15px"
 };
 
-const userDisplayStyle = {
-  position: "absolute" as const,
-  top: "20px",
-  left: "120px",
-  color: "#333",
-  fontSize: "18px",
-  fontWeight: "normal",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  backgroundColor: "#f8f9fa",
-  padding: "8px 12px",
-  borderRadius: "8px",
-  border: "1px solid #e9ecef"
-};
 
 // #endregion
 
@@ -866,28 +844,6 @@ async function migrateLocalStorageToSupabase() {
   // ==================== RENDER ====================
 const authSection = (
   <>
-    {!user ? (
-      <button 
-        style={authButtonStyle}
-        onClick={() => setShowAuthModal(true)}
-      >
-        Log in
-      </button>
-    ) : (
-      <>
-        <button 
-          style={authButtonStyle}
-          onClick={signOut}
-        >
-          Log out
-        </button>
-        <div style={userDisplayStyle}>
-  <span>👋 Welcome back,</span>
-  <span style={{fontWeight: "bold"}}>{user.user_metadata?.name || user.email.split('@')[0]}</span>
-</div>
-      </>
-    )}
-    
     {showAuthModal && (
       <div style={modalOverlayStyle} onClick={() => setShowAuthModal(false)}>
         <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
