@@ -692,22 +692,27 @@ async function migrateLocalStorageToSupabase() {
   </div>
 );
 
-  const taskInput = timerState === "stopped" && (
+ const taskInput = timerState === "stopped" && (
   <div style={compactRowStyle}>
     <input 
       style={taskInputStyle}
-      placeholder="Enter new task" 
+      placeholder={inputValue ? "" : "Enter new task"}  // Only show placeholder when empty
       value={inputValue} 
       onChange={(e) => setInputValue(e.target.value)}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           submit();
-          start(); // This already starts the timer
+          start();
         }
       }}
       autoComplete="off"
-      name="task"
+      autoCorrect="off"
+      autoCapitalize="off"
+      spellCheck="false"
+      name="task-name"
       type="text"
+      data-lpignore="true"
+      data-form-type="other"
     />
   </div>
 );
