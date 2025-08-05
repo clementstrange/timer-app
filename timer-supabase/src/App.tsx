@@ -691,12 +691,11 @@ async function migrateLocalStorageToSupabase() {
     {task || "Work Session"}
   </div>
 );
-
- const taskInput = timerState === "stopped" && (
+const taskInput = timerState === "stopped" && (
   <div style={compactRowStyle}>
     <input 
       style={taskInputStyle}
-      placeholder={inputValue ? "" : "Enter new task"}  // Only show placeholder when empty
+      placeholder="Enter new task"
       value={inputValue} 
       onChange={(e) => setInputValue(e.target.value)}
       onKeyDown={(e) => {
@@ -705,14 +704,16 @@ async function migrateLocalStorageToSupabase() {
           start();
         }
       }}
-      autoComplete="off"
+      autoComplete="new-password"
       autoCorrect="off"
       autoCapitalize="off"
-      spellCheck="false"
-      name="task-name"
+      spellCheck={false}
+      name="task-description"
       type="text"
       data-lpignore="true"
       data-form-type="other"
+      data-1p-ignore="true"
+      role="textbox"
     />
   </div>
 );
