@@ -878,16 +878,27 @@ const authSection = (
 
 const timerSection = (
   <div style={rightColumnStyle}>
+    {/* Welcome message above session header (only when logged in) */}
+    {user && (
+      <div style={{
+        fontSize: "16px",
+        textAlign: "center" as const,
+        color: "#666",
+        margin: "5px 0"
+      }}>
+        👋 Welcome back, <span style={{fontWeight: "bold", color: "#333"}}>{user.user_metadata?.name || user.email.split('@')[0]}</span>!
+      </div>
+    )}
+    
     {sessionHeader}
     
-    {/* Auth and welcome section */}
+    {/* Auth section under session header */}
     <div style={{
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
       gap: "15px",
-      margin: "5px 0",
-      flexWrap: "wrap" as const
+      margin: "5px 0"
     }}>
       {!user ? (
         <button 
@@ -897,21 +908,17 @@ const timerSection = (
           Log in
         </button>
       ) : (
-        <>
-          <div style={{
-            fontSize: "16px",
-            textAlign: "center" as const,
-            color: "#666"
-          }}>
-            👋 Welcome back, <span style={{fontWeight: "bold", color: "#333"}}>{user.user_metadata?.name || user.email.split('@')[0]}</span>!
-          </div>
-          <button 
-            style={secondaryButtonStyle}
-            onClick={signOut}
-          >
-            Log out
-          </button>
-        </>
+        <span 
+          style={{
+            color: "#007bff",
+            cursor: "pointer",
+            textDecoration: "underline",
+            fontSize: "14px"
+          }}
+          onClick={signOut}
+        >
+          Log out
+        </span>
       )}
     </div>
     
@@ -922,7 +929,6 @@ const timerSection = (
     {buttonGroup}
   </div>
 );
-
 if (isMobile) {
   return (
     <div style={containerStyle}>
