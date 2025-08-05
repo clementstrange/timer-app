@@ -241,7 +241,10 @@ const userDisplayStyle = {
   left: "120px",
   color: "#333",
   fontSize: "14px",
-  fontWeight: "bold"
+  fontWeight: "normal",
+  display: "flex",
+  alignItems: "center",
+  gap: "5px"
 };
 
 
@@ -860,8 +863,9 @@ const authSection = (
           Log out
         </button>
         <div style={userDisplayStyle}>
-          {user.user_metadata?.name || user.email}
-        </div>
+  <span>👋 Welcome back,</span>
+  <span style={{fontWeight: "bold"}}>{user.user_metadata?.name || user.email.split('@')[0]}</span>
+</div>
       </>
     )}
     
