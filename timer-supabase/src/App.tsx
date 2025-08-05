@@ -108,6 +108,7 @@ const compactRowStyle = {
   justifyContent: "center",
   width: "100%"
 };
+
 const taskInputStyle = {
   width: "200px",
   padding: "12px",
@@ -116,7 +117,7 @@ const taskInputStyle = {
   border: "2px solid #ddd",
   outline: "none",
   transition: "border-color 0.2s",
-  textAlign: "center" as const  // Add this to center the text and placeholder
+  textAlign: "left" as const, // Changed from center to left
 };
 
 const buttonStyle = {
