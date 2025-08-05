@@ -1,7 +1,16 @@
+# Development Journal - 5 August 2025
+
+[] Mobile version log in needs fix
+[] Login window auto-populate fix
+[] Fix fetch and save with RLS policy
+
 # Development Journal - 17 July 2025
 
 [x] Make progress on the full auth
 [x] Turn off RLS on Supabase
+[] Mobile version log in needs fix
+[] login window auto-populate fix
+[] fix fetch and save with RLS policy
 
 Sent the first full-auth message to backend!
 

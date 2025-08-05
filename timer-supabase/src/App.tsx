@@ -594,6 +594,7 @@ async function signIn() {
   } else {
     setShowAuthModal(false);
     setAuthForm({ name: '', email: '', password: '' });
+    fetchTasks();
   }
 }
 
