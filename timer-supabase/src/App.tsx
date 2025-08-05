@@ -87,7 +87,7 @@ const buttonGroupStyle = {
   gap: "10px", 
   justifyContent: "center",
   flexWrap: "wrap" as const,
-  marginTop: "20px"
+  marginTop: "10px"
 };
 
 const inputStyle = {
