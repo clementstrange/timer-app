@@ -402,6 +402,10 @@ React.useEffect(() => {
   }
   prevTimerStateRef.current = timerState;
 }, [timerState, task]);
+
+React.useEffect(() => {
+  fetchTasks();
+}, [user]);
   // ==================== TIMER LOGIC ====================
   
   function start() {
