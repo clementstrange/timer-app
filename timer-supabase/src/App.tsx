@@ -705,16 +705,46 @@ const taskInput = timerState === "stopped" && (
           start();
         }
       }}
-      autoComplete="one-time-code"
-      name={`task-${Date.now()}`}
-      type="search"
+      // Safari autofill prevention attributes
+      autoComplete="off"
+      autoCorrect="off"
+      autoCapitalize="off"
+      spellCheck="false"
+      
+      // Unique name/id to prevent autofill matching
+      name={`task-input-${user?.id || 'guest'}-${Date.now()}`}
+      id={`task-input-${user?.id || 'guest'}-${Date.now()}`}
+      
+      // Additional Safari-specific attributes
+      type="text"
+      inputMode="text"
+      enterKeyHint="go"
+      
+      // Prevent password managers and form fillers
       data-lpignore="true"
       data-form-type="other"
       data-1p-ignore="true"
       data-bitwarden-ignore="true"
-      inputMode="text"
-      enterKeyHint="go"
-      key={user ? 'logged-in' : 'logged-out'}
+      
+      // Safari placeholder fix - force re-render on focus
+      onFocus={(e) => {
+        // Force Safari to recognize the field as focused
+        e.target.style.color = '#000';
+        
+        // Temporary workaround for placeholder issue
+        const placeholder = e.target.placeholder;
+        e.target.placeholder = '';
+        setTimeout(() => {
+          e.target.placeholder = placeholder;
+        }, 1);
+      }}
+      
+      onBlur={(e) => {
+        // Reset color on blur if needed
+        if (!e.target.value) {
+          e.target.style.color = '';
+        }
+      }}
     />
   </div>
 );
