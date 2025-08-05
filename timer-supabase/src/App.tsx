@@ -42,7 +42,7 @@ const rightColumnStyle = {
   borderRadius: "12px",
   padding: "20px",
   boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-  minHeight: "auto"  // Let content determine height
+  minHeight: "200px"  // Let content determine height
 };
 
 const taskListStyle = { 
