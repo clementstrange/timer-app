@@ -884,7 +884,18 @@ const buttonGroup = (
   );
 
   // ==================== RENDER ====================
-const authSection = (
+
+  const handleAuthKeyDown = (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    if (isSignUp) {
+      signUp();
+    } else {
+      signIn();
+    }
+  }
+};
+
+  const authSection = (
   <>
     {showAuthModal && (
       <div style={modalOverlayStyle} onClick={() => setShowAuthModal(false)}>
@@ -897,6 +908,7 @@ const authSection = (
                 placeholder="Name"
                 value={authForm.name}
                 onChange={(e) => setAuthForm({...authForm, name: e.target.value})}
+                onKeyDown={handleAuthKeyDown} 
               />
             )}
             <input
@@ -905,6 +917,7 @@ const authSection = (
               type="email"
               value={authForm.email}
               onChange={(e) => setAuthForm({...authForm, email: e.target.value})}
+              onKeyDown={handleAuthKeyDown} 
             />
             <input
               style={inputStyle}
@@ -912,6 +925,7 @@ const authSection = (
               type="password"
               value={authForm.password}
               onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
+              onKeyDown={handleAuthKeyDown} 
             />
             <button 
               style={primaryButtonStyle}
