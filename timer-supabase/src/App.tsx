@@ -691,11 +691,12 @@ async function migrateLocalStorageToSupabase() {
     {task || "Work Session"}
   </div>
 );
+
 const taskInput = timerState === "stopped" && (
   <div style={compactRowStyle}>
     <input 
       style={taskInputStyle}
-      placeholder="Enter new task"
+      placeholder="Enter new task"  // Remove the conditional logic
       value={inputValue} 
       onChange={(e) => setInputValue(e.target.value)}
       onKeyDown={(e) => {
@@ -704,20 +705,20 @@ const taskInput = timerState === "stopped" && (
           start();
         }
       }}
-      autoComplete="new-password"
+      autoComplete="off"
       autoCorrect="off"
       autoCapitalize="off"
       spellCheck={false}
-      name="task-description"
+      name="task-input-field"
       type="text"
       data-lpignore="true"
       data-form-type="other"
       data-1p-ignore="true"
-      role="textbox"
+      form="nonexistent-form"
+      key={user ? 'logged-in' : 'logged-out'}
     />
   </div>
 );
-
   const timerDisplay = (
     <div style={{...timerDisplayStyle, color: getSessionColor()}}>
       {formatTime(count)}
