@@ -733,47 +733,63 @@ async function migrateLocalStorageToSupabase() {
   );
 
   const buttonGroup = (
-    <div style={buttonGroupStyle}>
-      <button 
-        style={primaryButtonStyle}
-        onClick={handleStartPauseResume}
-      >
-        {timerState === "stopped" ? "Start" :
-          timerState === "running" ? "Pause" :
-            "Resume"}
-      </button>
-      
-      {sessionType === "work" && (timerState === "running" || timerState === "paused") ? (
-        <button 
-          style={secondaryButtonStyle}
-          onClick={reset}
-        >
-          Finish
-        </button>
-      ) : sessionType !== "work" && (
-        <>
-          <button 
-            style={successButtonStyle}
-            onClick={() => setCount(prev => prev + 60)}
-          >
-            +1 min
-          </button> 
-          <button 
-            style={dangerButtonStyle}
-            onClick={() => setCount(prev => Math.max(0, prev - 60))}
-          >
-            -1 min
-          </button>
-          <button 
-            style={secondaryButtonStyle}
-            onClick={handleSkip}
-          >
-            Skip
-          </button>
-        </>
-      )}
-    </div>
-  );
+ <div style={buttonGroupStyle}>
+   <button 
+     style={primaryButtonStyle}
+     onClick={handleStartPauseResume}
+   >
+     {timerState === "stopped" ? "Start" :
+       timerState === "running" ? "Pause" :
+         "Resume"}
+   </button>
+   
+   {!user ? (
+     <button 
+       style={secondaryButtonStyle}
+       onClick={() => setShowAuthModal(true)}
+     >
+       Log in
+     </button>
+   ) : (
+     <button 
+       style={secondaryButtonStyle}
+       onClick={signOut}
+     >
+       Log out
+     </button>
+   )}
+   
+   {sessionType === "work" && (timerState === "running" || timerState === "paused") ? (
+     <button 
+       style={secondaryButtonStyle}
+       onClick={reset}
+     >
+       Finish
+     </button>
+   ) : sessionType !== "work" && (
+     <>
+       <button 
+         style={successButtonStyle}
+         onClick={() => setCount(prev => prev + 60)}
+       >
+         +1 min
+       </button> 
+       <button 
+         style={dangerButtonStyle}
+         onClick={() => setCount(prev => Math.max(0, prev - 60))}
+       >
+         -1 min
+       </button>
+       <button 
+         style={secondaryButtonStyle}
+         onClick={handleSkip}
+       >
+         Skip
+       </button>
+     </>
+   )}
+ </div>
+);
 
   const taskList = (
     <div style={taskListStyle}>
