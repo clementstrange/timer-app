@@ -240,13 +240,16 @@ const userDisplayStyle = {
   top: "20px",
   left: "120px",
   color: "#333",
-  fontSize: "14px",
+  fontSize: "18px",
   fontWeight: "normal",
   display: "flex",
   alignItems: "center",
-  gap: "5px"
+  gap: "8px",
+  backgroundColor: "#f8f9fa",
+  padding: "8px 12px",
+  borderRadius: "8px",
+  border: "1px solid #e9ecef"
 };
-
 
 // #endregion
 
