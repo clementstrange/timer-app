@@ -709,9 +709,18 @@ async function migrateLocalStorageToSupabase() {
       {formatTime(count)}
     </div>
   );
-
 const buttonGroup = (
   <div style={buttonGroupStyle}>
+    {/* Login button on the left (only when not logged in) */}
+    {!user && (
+      <button 
+        style={secondaryButtonStyle}
+        onClick={() => setShowAuthModal(true)}
+      >
+        Log in
+      </button>
+    )}
+
     {/* Start/Pause/Resume button */}
     <button 
       style={primaryButtonStyle}
@@ -892,22 +901,13 @@ const timerSection = (
     
     {sessionHeader}
     
-    {/* Auth section under session header */}
-    <div style={{
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: "15px",
-      margin: "5px 0"
-    }}>
-      {!user ? (
-        <button 
-          style={secondaryButtonStyle}
-          onClick={() => setShowAuthModal(true)}
-        >
-          Log in
-        </button>
-      ) : (
+    {/* Log out hyperlink under session header (only when logged in) */}
+    {user && (
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        margin: "5px 0"
+      }}>
         <span 
           style={{
             color: "#007bff",
@@ -919,8 +919,8 @@ const timerSection = (
         >
           Log out
         </span>
-      )}
-    </div>
+      </div>
+    )}
     
     {pomodoroCounter}
     {activeTaskDisplay}
