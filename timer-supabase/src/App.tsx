@@ -580,13 +580,13 @@ async function signUp() {
   });
   
   if (error) {
-    console.error('Sign up error:', error);
+    alert(error.message); // Show the actual error message
   } else {
+    alert('Check your email to confirm your account!'); // Let them know to check email
     setShowAuthModal(false);
     setAuthForm({ name: '', email: '', password: '' });
   }
 }
-
 async function signIn() {
   const { error } = await supabase.auth.signInWithPassword({
     email: authForm.email,
@@ -594,7 +594,7 @@ async function signIn() {
   });
   
   if (error) {
-    console.error('Sign in error:', error);
+    alert(error.message); // Show the actual error message
   } else {
     setShowAuthModal(false);
     setAuthForm({ name: '', email: '', password: '' });
