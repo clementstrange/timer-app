@@ -696,7 +696,7 @@ const taskInput = timerState === "stopped" && (
   <div style={compactRowStyle}>
     <input 
       style={taskInputStyle}
-      placeholder="Enter new task"  // Remove the conditional logic
+      placeholder="Enter new task"
       value={inputValue} 
       onChange={(e) => setInputValue(e.target.value)}
       onKeyDown={(e) => {
@@ -705,21 +705,22 @@ const taskInput = timerState === "stopped" && (
           start();
         }
       }}
-      autoComplete="off"
-      autoCorrect="off"
-      autoCapitalize="off"
-      spellCheck={false}
-      name="task-input-field"
-      type="text"
+      autoComplete="one-time-code"
+      name={`task-${Date.now()}`}
+      type="search"
       data-lpignore="true"
       data-form-type="other"
       data-1p-ignore="true"
-      form="nonexistent-form"
+      data-bitwarden-ignore="true"
+      inputMode="text"
+      enterKeyHint="go"
       key={user ? 'logged-in' : 'logged-out'}
     />
   </div>
 );
-  const timerDisplay = (
+
+
+const timerDisplay = (
     <div style={{...timerDisplayStyle, color: getSessionColor()}}>
       {formatTime(count)}
     </div>
