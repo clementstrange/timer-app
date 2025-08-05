@@ -710,63 +710,49 @@ async function migrateLocalStorageToSupabase() {
     </div>
   );
 
-  const buttonGroup = (
- <div style={buttonGroupStyle}>
-   <button 
-     style={primaryButtonStyle}
-     onClick={handleStartPauseResume}
-   >
-     {timerState === "stopped" ? "Start" :
-       timerState === "running" ? "Pause" :
-         "Resume"}
-   </button>
-   
-   {!user ? (
-     <button 
-       style={secondaryButtonStyle}
-       onClick={() => setShowAuthModal(true)}
-     >
-       Log in
-     </button>
-   ) : (
-     <button 
-       style={secondaryButtonStyle}
-       onClick={signOut}
-     >
-       Log out
-     </button>
-   )}
-   
-   {sessionType === "work" && (timerState === "running" || timerState === "paused") ? (
-     <button 
-       style={secondaryButtonStyle}
-       onClick={reset}
-     >
-       Finish
-     </button>
-   ) : sessionType !== "work" && (
-     <>
-       <button 
-         style={successButtonStyle}
-         onClick={() => setCount(prev => prev + 60)}
-       >
-         +1 min
-       </button> 
-       <button 
-         style={dangerButtonStyle}
-         onClick={() => setCount(prev => Math.max(0, prev - 60))}
-       >
-         -1 min
-       </button>
-       <button 
-         style={secondaryButtonStyle}
-         onClick={handleSkip}
-       >
-         Skip
-       </button>
-     </>
-   )}
- </div>
+const buttonGroup = (
+  <div style={buttonGroupStyle}>
+    {/* Start/Pause/Resume button */}
+    <button 
+      style={primaryButtonStyle}
+      onClick={handleStartPauseResume}
+    >
+      {timerState === "stopped" ? "Start" :
+        timerState === "running" ? "Pause" :
+          "Resume"}
+    </button>
+    
+    {/* Other buttons */}
+    {sessionType === "work" && (timerState === "running" || timerState === "paused") ? (
+      <button 
+        style={secondaryButtonStyle}
+        onClick={reset}
+      >
+        Finish
+      </button>
+    ) : sessionType !== "work" && (
+      <>
+        <button 
+          style={successButtonStyle}
+          onClick={() => setCount(prev => prev + 60)}
+        >
+          +1 min
+        </button> 
+        <button 
+          style={dangerButtonStyle}
+          onClick={() => setCount(prev => Math.max(0, prev - 60))}
+        >
+          -1 min
+        </button>
+        <button 
+          style={secondaryButtonStyle}
+          onClick={handleSkip}
+        >
+          Skip
+        </button>
+      </>
+    )}
+  </div>
 );
 
   const taskList = (
@@ -893,6 +879,42 @@ const authSection = (
 const timerSection = (
   <div style={rightColumnStyle}>
     {sessionHeader}
+    
+    {/* Auth and welcome section */}
+    <div style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: "15px",
+      margin: "5px 0",
+      flexWrap: "wrap" as const
+    }}>
+      {!user ? (
+        <button 
+          style={secondaryButtonStyle}
+          onClick={() => setShowAuthModal(true)}
+        >
+          Log in
+        </button>
+      ) : (
+        <>
+          <div style={{
+            fontSize: "16px",
+            textAlign: "center" as const,
+            color: "#666"
+          }}>
+            👋 Welcome back, <span style={{fontWeight: "bold", color: "#333"}}>{user.user_metadata?.name || user.email.split('@')[0]}</span>!
+          </div>
+          <button 
+            style={secondaryButtonStyle}
+            onClick={signOut}
+          >
+            Log out
+          </button>
+        </>
+      )}
+    </div>
+    
     {pomodoroCounter}
     {activeTaskDisplay}
     {taskInput}
