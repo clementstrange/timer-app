@@ -108,7 +108,6 @@ const compactRowStyle = {
   justifyContent: "center",
   width: "100%"
 };
-
 const taskInputStyle = {
   width: "200px",
   padding: "12px",
@@ -116,7 +115,8 @@ const taskInputStyle = {
   borderRadius: "8px",
   border: "2px solid #ddd",
   outline: "none",
-  transition: "border-color 0.2s"
+  transition: "border-color 0.2s",
+  textAlign: "center" as const  // Add this to center the text and placeholder
 };
 
 const buttonStyle = {
@@ -699,7 +699,15 @@ async function migrateLocalStorageToSupabase() {
       placeholder="Enter new task" 
       value={inputValue} 
       onChange={(e) => setInputValue(e.target.value)}
-      onKeyDown={handleTaskInput}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          submit();
+          start(); // This already starts the timer
+        }
+      }}
+      autoComplete="off"
+      name="task"
+      type="text"
     />
   </div>
 );
@@ -884,30 +892,24 @@ const authSection = (
     )}
   </>
 );
-
 const timerSection = (
   <div style={rightColumnStyle}>
-    {/* Welcome message above session header (only when logged in) */}
+    {/* Welcome message and logout link above session header (only when logged in) */}
     {user && (
       <div style={{
         fontSize: "16px",
         textAlign: "center" as const,
         color: "#666",
-        margin: "5px 0"
-      }}>
-        👋 Welcome back, <span style={{fontWeight: "bold", color: "#333"}}>{user.user_metadata?.name || user.email.split('@')[0]}</span>!
-      </div>
-    )}
-    
-    {sessionHeader}
-    
-    {/* Log out hyperlink under session header (only when logged in) */}
-    {user && (
-      <div style={{
+        margin: "5px 0",
         display: "flex",
         justifyContent: "center",
-        margin: "5px 0"
+        alignItems: "center",
+        gap: "10px",
+        flexWrap: "wrap" as const
       }}>
+        <span>
+          👋 Welcome back, <span style={{fontWeight: "bold", color: "#333"}}>{user.user_metadata?.name || user.email.split('@')[0]}</span>!
+        </span>
         <span 
           style={{
             color: "#007bff",
@@ -921,6 +923,8 @@ const timerSection = (
         </span>
       </div>
     )}
+    
+    {sessionHeader}
     
     {pomodoroCounter}
     {activeTaskDisplay}
