@@ -707,7 +707,7 @@ const taskInput = timerState === "stopped" && (
         }
       }}
       // Safari autofill prevention attributes
-      autoComplete="off"
+      autoComplete="new-password"
       autoCorrect="off"
       autoCapitalize="off"
       spellCheck="false"
