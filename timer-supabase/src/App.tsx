@@ -248,9 +248,11 @@ function App() {
   const [completedPomos, setCompletedPomos] = useState(0);
 
   // Task state  
+  const [baseInputId] = useState(Date.now());
   const [task, setTask] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
+  
 
   // Edit mode state
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
@@ -278,6 +280,7 @@ function App() {
   password: ''
   });
   const [isSignUp, setIsSignUp] = useState(false);
+  
 
   // #endregion
 
@@ -396,6 +399,14 @@ React.useEffect(() => {
     fetchTasks();
   }
 }, [user, isAuthResolved]);
+
+React.useEffect(() => {
+  return () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+  };
+}, []);
   // ==================== TIMER LOGIC ====================
   
   function start() {
@@ -562,7 +573,7 @@ function fetchTasks() {
       const dateB = b.created_at ? new Date(b.created_at).getTime() : b.id || 0;
       return dateB - dateA; // newest first
     });
-    setCompletedTasks(tasks);
+    setCompletedTasks(sortedTasks); // Use the sorted array
   }
 }
 
@@ -736,8 +747,8 @@ const taskInput = timerState === "stopped" && (
       spellCheck="false"
       
       // Unique name/id to prevent autofill matching
-      name={`task-input-${user?.id || 'guest'}-${Date.now()}`}
-      id={`task-input-${user?.id || 'guest'}-${Date.now()}`}
+      name={`task-input-${user?.id || 'guest'}-${baseInputId}`}
+      id={`task-input-${user?.id || 'guest'}-${baseInputId}`}
       
       // Additional Safari-specific attributes
       type="text"
