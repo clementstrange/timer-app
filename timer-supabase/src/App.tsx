@@ -272,7 +272,7 @@ function App() {
   // Detect login state
   const [isAuthResolved, setIsAuthResolved] = useState(false);
   const [user, setUser] = useState<any>(null);
-  console.log('Current user state:', user);
+
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authForm, setAuthForm] = useState({
   name: '',
@@ -485,13 +485,6 @@ React.useEffect(() => {
     }
   };
 
-  const handleTaskInput = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      submit();
-      start(); 
-    }
-  };
-
   const handleSkip = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -504,19 +497,12 @@ React.useEffect(() => {
   async function saveWorkSession() {
   const timeWorked = getSessionDuration(sessionType) - count;
   const taskName = currentTaskRef.current;
-  console.log('saveWorkSession called');
-  console.log('taskName:', taskName);
-  console.log('hasStartedRef.current:', hasStartedRef.current);
-  console.log('timeWorked:', timeWorked);
-  console.log('User state in saveWorkSession:', user);
+  
 
   if (taskName && hasStartedRef.current && timeWorked > 0) {
     if (user) {
-  // Test what Supabase thinks the current user is
-  const { data: { user: currentUser } } = await supabase.auth.getUser();
-  console.log('React user.id:', user.id);
-  console.log('Supabase user.id:', currentUser?.id);
-  console.log('Are they equal?', user.id === currentUser?.id);
+
+
   
   const { data, error } = await supabase
     .from('tasks')
@@ -528,13 +514,11 @@ React.useEffect(() => {
       }
     ]);
   
-  console.log('Insert response - data:', data);
-  console.log('Insert response - error:', error);
-  console.log('=== END DEBUG ===');
+  
   
   if (error) console.error('Error saving task:', error);
 } else {
-      console.log('Using localStorage');
+
 
       // localStorage code
       const existingTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
@@ -699,7 +683,7 @@ async function migrateLocalStorageToSupabase() {
     
     if (!error) {
       localStorage.removeItem('tasks');
-      console.log('Successfully migrated tasks to Supabase');
+
     } else {
       console.error('Migration failed:', error);
     }
@@ -857,8 +841,8 @@ const buttonGroup = (
     <div style={taskListStyle}>
       <h4 style={{margin: "0 0 15px 0", color: "#333"}}>Recent Tasks</h4>
       {completedTasks.length > 0 ? (
-        completedTasks.map((task, index) => (
-          <div key={index} style={taskItemStyle}>
+        completedTasks.map((task) => (
+        <div key={task.id} style={taskItemStyle}>
             {editingTaskId === task.id ? (
               <div style={editFormStyle}>
                 <input
