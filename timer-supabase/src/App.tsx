@@ -557,6 +557,11 @@ function fetchTasks() {
   } else {
     // localStorage code
     const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const sortedTasks = tasks.sort((a: any, b: any) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : a.id || 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : b.id || 0;
+      return dateB - dateA; // newest first
+    });
     setCompletedTasks(tasks);
   }
 }
@@ -658,15 +663,26 @@ function deleteTask(task_id: number) {
     fetchTasks(); // Refresh the UI
   }
 }
+
 async function migrateLocalStorageToSupabase() {
   const localTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-  if (localTasks.length > 0) {
+  if (localTasks.length > 0 && user?.id) { // More explicit user check
+    const tasksWithUserId = localTasks.map((task: any) => ({
+      task_name: task.task_name,
+      time_worked: task.time_worked,
+      user_id: user.id,
+      created_at: task.created_at || new Date().toISOString() // Preserve or create timestamp
+    }));
+    
     const { error } = await supabase
       .from('tasks')
-      .insert(localTasks);
+      .insert(tasksWithUserId);
     
     if (!error) {
-      localStorage.removeItem('tasks'); // Clear after successful migration
+      localStorage.removeItem('tasks');
+      console.log('Successfully migrated tasks to Supabase');
+    } else {
+      console.error('Migration failed:', error);
     }
   }
 }
