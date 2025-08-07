@@ -1,4 +1,13 @@
+# Development Journal - 7 August 2025
+
+[] Active default task from last time remains. Check this one!
+[] The autofill still wants to fill in. 
+
 # Development Journal - 5 August 2025
+
+[] Active default task from last time remains. Check this one!
+[] The autofill still wants to fill in. 
+
 
 [x] Mobile version log in needs fix
 [x] Login window auto-populate fix

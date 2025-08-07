@@ -456,10 +456,13 @@ React.useEffect(() => {
   
   const handleStartPauseResume = () => {
     if (timerState === "stopped") {
-      if (!task) {
-        submit(); // Set the task first
-      }
+      // if (!task) {
+      //   submit(); // Set the task first
+      // }
+      // start(); // Then start the timer
+      submit(); // Always call submit to update the current task
       start(); // Then start the timer
+
     } else if (timerState === "running") {
       pause();
     } else if (timerState === "paused") {
