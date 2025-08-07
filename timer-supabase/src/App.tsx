@@ -551,31 +551,39 @@ React.useEffect(() => {
     hasStartedRef.current = false;
   }
 }
-function fetchTasks() {
-  if (user) {
-    // Your existing Supabase code
-    supabase
-      .from('tasks')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Error fetching tasks:', error);
-        } else {
-          setCompletedTasks(data || []);
-        }
+  function fetchTasks() {
+    if (user) {
+      // Your existing Supabase code
+      supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Error fetching tasks:', error);
+          } else {
+            setCompletedTasks(data || []);
+          }
+        });
+    } else {
+      const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+      const sortedTasks = tasks.sort((a: any, b: any) => {
+        // Robust date parsing with fallback
+        const getTimestamp = (task: any) => {
+          if (task.created_at) {
+            const date = new Date(task.created_at);
+            return isNaN(date.getTime()) ? task.id || 0 : date.getTime();
+          }
+          return task.id || 0;
+        };
+        
+        const dateA = getTimestamp(a);
+        const dateB = getTimestamp(b);
+        return dateB - dateA; // newest first
       });
-  } else {
-    // localStorage code
-    const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-    const sortedTasks = tasks.sort((a: any, b: any) => {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : a.id || 0;
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : b.id || 0;
-      return dateB - dateA; // newest first
-    });
-    setCompletedTasks(sortedTasks); // Use the sorted array
+      setCompletedTasks(sortedTasks);
+    }
   }
-}
 
 async function signUp() {
   const { error } = await supabase.auth.signUp({
