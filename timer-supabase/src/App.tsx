@@ -268,6 +268,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // Detect login state
+  const [isAuthResolved, setIsAuthResolved] = useState(false);
   const [user, setUser] = useState<any>(null);
   console.log('Current user state:', user);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -285,6 +286,7 @@ function App() {
   React.useEffect(() => {
   supabase.auth.getSession().then(({ data: { session } }) => {
     setUser(session?.user ?? null);
+    setIsAuthResolved(true);
     fetchTasks(); // Fetch after auth state is set
   });
 
@@ -390,8 +392,10 @@ React.useEffect(() => {
 }, [timerState, task]);
 
 React.useEffect(() => {
-  fetchTasks();
-}, [user]);
+  if (isAuthResolved) { // Only run after initial auth check
+    fetchTasks();
+  }
+}, [user, isAuthResolved]);
   // ==================== TIMER LOGIC ====================
   
   function start() {
