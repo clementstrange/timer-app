@@ -1,7 +1,24 @@
 # Development Journal - 7 August 2025
 
-[] Active default task from last time remains. Check this one!
+[x] Active default task from last time remains. Check this one!
 [] The autofill still wants to fill in. 
+[] Tasks from localstorage do not migrate
+[] Implement spacebar to stop/resume
+[] Implement export to CSV
+
+
+Fixed task name persistence bug
+Implemented localStorage sorting consistency
+Resolved migration timing issues
+Added stable input IDs
+Fixed React key props
+Cleaned debug console logs
+Removed unused functions
+Improved date parsing robustness
+Identified memory leak patterns
+Added timer cleanup logic
+Analyzed auth race conditions
+
 
 # Development Journal - 5 August 2025
 
