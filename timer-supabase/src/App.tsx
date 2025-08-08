@@ -2,6 +2,41 @@ import React from 'react';
 import { useState, useRef } from 'react';
 import { supabase } from './supabase';
 
+// #region TypeScript Interfaces and Types
+
+export enum SessionType {
+  WORK = 'work',
+  BREAK = 'break',
+  LONG_BREAK = 'longBreak'
+}
+
+export type TimerState = 'stopped' | 'running' | 'paused';
+
+export interface Task {
+  id: number;
+  task_name: string;
+  time_worked: number;
+  created_at: string;
+  user_id?: string;
+  sync_pending?: boolean;
+}
+
+export interface AuthForm {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface User {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    name?: string;
+  };
+}
+
+// #endregion
+
 // #region Component Styles
 const containerStyle = { 
   display: "flex", 
@@ -233,25 +268,31 @@ const modalFormStyle = {
 // #endregion
 
 function App() {
-  function getSessionDuration(type: any) {
-    if (type === "work") return 25; // 25 minutes in seconds
-    if (type === "break") return 5; // 5 minutes in seconds
-    if (type === "longBreak") return 10; // 10 minutes in seconds
-    throw new Error(`Unknown session type: ${type}`);
+  function getSessionDuration(type: SessionType): number {
+    switch (type) {
+      case SessionType.WORK:
+        return 25; // 25 minutes in seconds
+      case SessionType.BREAK:
+        return 5; // 5 minutes in seconds
+      case SessionType.LONG_BREAK:
+        return 10; // 10 minutes in seconds
+      default:
+        throw new Error(`Unknown session type: ${type}`);
+    }
   }
 
   // #region State Variables
   // Timer state
-  const [count, setCount] = useState(getSessionDuration("work"));
-  const [timerState, setTimerState] = useState("stopped");
-  const [sessionType, setSessionType] = useState("work");
+  const [count, setCount] = useState(getSessionDuration(SessionType.WORK));
+  const [timerState, setTimerState] = useState<TimerState>("stopped");
+  const [sessionType, setSessionType] = useState<SessionType>(SessionType.WORK);
   const [completedPomos, setCompletedPomos] = useState(0);
 
   // Task state  
   const [baseInputId] = useState(Date.now());
   const [task, setTask] = useState("");
   const [inputValue, setInputValue] = useState("");
-  const [completedTasks, setCompletedTasks] = useState<any[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   
 
   // Edit mode state
@@ -265,7 +306,7 @@ function App() {
   const pausedTimeRef = useRef<number>(0);
   const currentTaskRef = useRef("");
   const hasStartedRef = useRef(false);
-  const currentSessionTypeRef = useRef("work");
+  const currentSessionTypeRef = useRef<SessionType>(SessionType.WORK);
   const prevTimerStateRef = useRef(timerState);
   
   // Detect if we're on mobile or desktop
@@ -273,13 +314,13 @@ function App() {
 
   // Detect login state
   const [isAuthResolved, setIsAuthResolved] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authForm, setAuthForm] = useState({
-  name: '',
-  email: '',
-  password: ''
+  const [authForm, setAuthForm] = useState<AuthForm>({
+    name: '',
+    email: '',
+    password: ''
   });
   const [isSignUp, setIsSignUp] = useState(false);
   
@@ -376,24 +417,24 @@ function App() {
         timerRef.current = null;
       }
       
-      if (sessionType === "work") {
+      if (sessionType === SessionType.WORK) {
         saveWorkSession().then(() => {
           fetchTasks();
         });
         setCompletedPomos(prev => {
           const newCount = prev + 1;
           if (newCount === 4) {
-            setSessionType("longBreak");
+            setSessionType(SessionType.LONG_BREAK);
             setTimerState("running"); // Auto-start break
             return 0;
           } else {
-            setSessionType("break");
+            setSessionType(SessionType.BREAK);
             setTimerState("running"); // Auto-start break
             return newCount;
           }
         });
-      } else if (sessionType === "break" || sessionType === "longBreak") {
-        setSessionType("work");
+      } else if (sessionType === SessionType.BREAK || sessionType === SessionType.LONG_BREAK) {
+        setSessionType(SessionType.WORK);
         setTimerState("stopped"); // User must manually start next work session
       }
       
@@ -490,7 +531,7 @@ React.useEffect(() => {
     
     // Reset timer state properly
     setTimerState("stopped");
-    setSessionType("work"); // Return to work session, not break
+    setSessionType(SessionType.WORK); // Return to work session, not break
     pausedTimeRef.current = 0;
     startTimeRef.current = null;
     
@@ -537,7 +578,7 @@ React.useEffect(() => {
       clearInterval(timerRef.current);
     }
     setTimerState("stopped");
-    setSessionType("work");
+    setSessionType(SessionType.WORK);
   };
 
   // #region API Calls
@@ -626,8 +667,8 @@ React.useEffect(() => {
     } else {
       try {
         const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-        const sortedTasks = tasks.sort((a: any, b: any) => {
-          const getTimestamp = (task: any) => {
+        const sortedTasks = tasks.sort((a: Task, b: Task) => {
+          const getTimestamp = (task: Task): number => {
             if (task.created_at) {
               const date = new Date(task.created_at);
               return isNaN(date.getTime()) ? task.id || 0 : date.getTime();
@@ -718,7 +759,7 @@ async function signOut() {
     }
   }
 
-  function saveTask(task_id: number) {
+  function saveTask(task_id: number): void {
   if (user) {
     // Supabase code
     supabase
@@ -734,7 +775,7 @@ async function signOut() {
       });
   } else {
     // localStorage code
-    const existingTasks: any[] = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const existingTasks: Task[] = JSON.parse(localStorage.getItem('tasks') || '[]');
     const updatedTasks = existingTasks.map(task => 
       task.id === task_id 
         ? { ...task, task_name: editTaskName, time_worked: editTimeWorked }
@@ -746,7 +787,7 @@ async function signOut() {
   }
 }
 
-function deleteTask(task_id: number) {
+function deleteTask(task_id: number): void {
   if (user) {
     // Supabase code
     supabase
@@ -756,21 +797,21 @@ function deleteTask(task_id: number) {
       .then(() => fetchTasks());
   } else {
     // localStorage code
-    const existingTasks: any[] = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const existingTasks: Task[] = JSON.parse(localStorage.getItem('tasks') || '[]');
     const updatedTasks = existingTasks.filter(task => task.id !== task_id);
     localStorage.setItem('tasks', JSON.stringify(updatedTasks));
     fetchTasks(); // Refresh the UI
   }
 }
 
-async function migrateLocalStorageToSupabase() {
-  const localTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-  if (localTasks.length > 0 && user?.id) { // More explicit user check
-    const tasksWithUserId = localTasks.map((task: any) => ({
+async function migrateLocalStorageToSupabase(): Promise<void> {
+  const localTasks: Task[] = JSON.parse(localStorage.getItem('tasks') || '[]');
+  if (localTasks.length > 0 && user?.id) {
+    const tasksWithUserId = localTasks.map((task: Task) => ({
       task_name: task.task_name,
       time_worked: task.time_worked,
       user_id: user.id,
-      created_at: task.created_at || new Date().toISOString() // Preserve or create timestamp
+      created_at: task.created_at || new Date().toISOString()
     }));
     
     const { error } = await supabase
@@ -779,25 +820,31 @@ async function migrateLocalStorageToSupabase() {
     
     if (!error) {
       localStorage.removeItem('tasks');
-
     } else {
       console.error('Migration failed:', error);
     }
   }
 }
   // Get session type color
-  function getSessionColor() {
-    if (sessionType === "work") return "#007bff";
-    if (sessionType === "break") return "#28a745";
-    return "#17a2b8";
+  function getSessionColor(): string {
+    switch (sessionType) {
+      case SessionType.WORK:
+        return "#007bff";
+      case SessionType.BREAK:
+        return "#28a745";
+      case SessionType.LONG_BREAK:
+        return "#17a2b8";
+      default:
+        return "#007bff";
+    }
   }
 
   // ==================== SHARED COMPONENTS ====================
   
   const sessionHeader = (
     <div style={{...sessionHeaderStyle, color: getSessionColor()}}>
-      {sessionType === "work" ? "🍅 WORK SESSION" : 
-       sessionType === "break" ? "☕ BREAK TIME" : 
+      {sessionType === SessionType.WORK ? "🍅 WORK SESSION" : 
+       sessionType === SessionType.BREAK ? "☕ BREAK TIME" : 
        "🏖️ LONG BREAK"}
     </div>
   );
@@ -901,7 +948,7 @@ const buttonGroup = (
     </button>
     
     {/* Other buttons */}
-    {sessionType === "work" && (timerState === "running" || timerState === "paused") ? (
+    {sessionType === SessionType.WORK && (timerState === "running" || timerState === "paused") ? (
       <button 
         style={secondaryButtonStyle}
         onClick={reset}
@@ -1083,7 +1130,7 @@ const timerSection = (
         flexWrap: "wrap" as const
       }}>
         <span>
-          👋 Welcome back, <span style={{fontWeight: "bold", color: "#333"}}>{user.user_metadata?.name || user.email.split('@')[0]}</span>!
+          👋 Welcome back, <span style={{fontWeight: "bold", color: "#333"}}>{user.user_metadata?.name || user.email?.split('@')[0] || 'User'}</span>!
         </span>
         <span 
           style={{
