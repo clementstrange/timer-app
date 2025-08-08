@@ -491,6 +491,27 @@ React.useEffect(() => {
 
   return () => clearInterval(interval);
 }, [inputValue]);
+
+// Spacebar keyboard shortcut for start/pause/resume
+React.useEffect(() => {
+  const handleKeyDown = (event: KeyboardEvent) => {
+    // Only trigger if not typing in an input field
+    const activeElement = document.activeElement;
+    const isInputFocused = activeElement && (
+      activeElement.tagName === 'INPUT' || 
+      activeElement.tagName === 'TEXTAREA' || 
+      (activeElement as HTMLElement).contentEditable === 'true'
+    );
+    
+    if (event.code === 'Space' && !isInputFocused) {
+      event.preventDefault(); // Prevent page scroll
+      handleStartPauseResume();
+    }
+  };
+
+  document.addEventListener('keydown', handleKeyDown);
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, [timerState, task, inputValue]); // Dependencies needed for handleStartPauseResume
   // ==================== TIMER LOGIC ====================
   
   function start() {
@@ -1227,6 +1248,25 @@ const timerSection = (
     {activeTaskDisplay}
     {taskInput}
     {timerDisplay}
+    
+    {/* Spacebar hint */}
+    <div style={{
+      fontSize: "12px",
+      color: "#999",
+      textAlign: "center" as const,
+      margin: "5px 0",
+      opacity: 0.7
+    }}>
+      Press <kbd style={{
+        backgroundColor: "#f5f5f5",
+        border: "1px solid #ccc",
+        borderRadius: "3px",
+        padding: "2px 6px",
+        fontSize: "11px",
+        fontFamily: "monospace"
+      }}>Space</kbd> to {timerState === "stopped" ? "start" : timerState === "running" ? "pause" : "resume"}
+    </div>
+    
     {buttonGroup}
   </div>
 );
