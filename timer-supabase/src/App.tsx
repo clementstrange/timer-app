@@ -234,9 +234,9 @@ const modalFormStyle = {
 
 function App() {
   function getSessionDuration(type: any) {
-    if (type === "work") return 25;
-    if (type === "break") return 5;
-    if (type === "longBreak") return 10;
+    if (type === "work") return 25; // 25 minutes in seconds
+    if (type === "break") return 5; // 5 minutes in seconds
+    if (type === "longBreak") return 10; // 10 minutes in seconds
     throw new Error(`Unknown session type: ${type}`);
   }
 
@@ -261,6 +261,8 @@ function App() {
   
   // Refs for timer management
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+  const pausedTimeRef = useRef<number>(0);
   const currentTaskRef = useRef("");
   const hasStartedRef = useRef(false);
   const currentSessionTypeRef = useRef("work");
@@ -314,14 +316,29 @@ function App() {
   return () => subscription.unsubscribe();
 }, []);
   
-  // Add this useEffect to show timer in title
+  // Add this useEffect to show timer in title (debounced)
   React.useEffect(() => {
     const baseTitle = "Life in Focus";
+    let timeoutId: NodeJS.Timeout;
+    
+    const updateTitle = () => {
+      if (timerState === "running") {
+        document.title = `${formatTime(count)} - ${sessionType === "work" ? "Work" : "Break"} | ${baseTitle}`;
+      } else {
+        document.title = baseTitle;
+      }
+    };
+    
+    // Debounce title updates to reduce frequency
     if (timerState === "running") {
-      document.title = `${formatTime(count)} - ${sessionType === "work" ? "Work" : "Break"} | ${baseTitle}`;
+      timeoutId = setTimeout(updateTitle, 1000);
     } else {
-      document.title = baseTitle;
+      updateTitle();
     }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [count, timerState, sessionType]);
   
   // Keep session type ref in sync
@@ -331,22 +348,35 @@ function App() {
 
   // Handle session type changes and timer restart
   React.useEffect(() => {
-    setCount(getSessionDuration(sessionType));
+    const newDuration = getSessionDuration(sessionType);
+    setCount(newDuration);
+    pausedTimeRef.current = 0;
     
     if (timerState === "running") {
+      // Clear existing timer
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      // Start new timer with accurate timing
+      startTimeRef.current = Date.now();
       timerRef.current = setInterval(() => {
-        setCount(prev => prev <= 0 ? 0 : prev - 1);
-      }, 1000);
+        const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000) + pausedTimeRef.current;
+        const remaining = Math.max(0, newDuration - elapsed);
+        setCount(remaining);
+      }, 100); // More frequent updates for accuracy
     }
   }, [sessionType]);
 
   // Handle session transitions when timer reaches 0
   React.useEffect(() => {
     if (count === 0 && timerState === "running") {
-      if (currentSessionTypeRef.current === "work") {
+      // Clear timer immediately
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      if (sessionType === "work") {
         saveWorkSession().then(() => {
           fetchTasks();
         });
@@ -354,27 +384,24 @@ function App() {
           const newCount = prev + 1;
           if (newCount === 4) {
             setSessionType("longBreak");
+            setTimerState("running"); // Auto-start break
             return 0;
           } else {
             setSessionType("break");
+            setTimerState("running"); // Auto-start break
             return newCount;
           }
         });
-      } else if (currentSessionTypeRef.current === "break") {
+      } else if (sessionType === "break" || sessionType === "longBreak") {
         setSessionType("work");
-        setTimerState("stopped");
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-      } else if (currentSessionTypeRef.current === "longBreak") {
-        setSessionType("work");
-        setTimerState("stopped");
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
+        setTimerState("stopped"); // User must manually start next work session
       }
+      
+      // Reset timing refs
+      pausedTimeRef.current = 0;
+      startTimeRef.current = null;
     }
-  }, [count, timerState]);
+  }, [count, timerState, sessionType]);
 
   // Handle screen resize
   React.useEffect(() => {
@@ -400,10 +427,12 @@ React.useEffect(() => {
   }
 }, [user, isAuthResolved]);
 
+// Cleanup on unmount
 React.useEffect(() => {
   return () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
   };
 }, []);
@@ -413,28 +442,41 @@ React.useEffect(() => {
     hasStartedRef.current = true;
     setTimerState("running");
     
+    // Clear existing timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
     
+    // Start timer with accurate timing
+    startTimeRef.current = Date.now();
+    const sessionDuration = getSessionDuration(sessionType);
+    
     timerRef.current = setInterval(() => {
-      setCount(prev => {
-        if (prev <= 0) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-          }
-          return 0;
+      const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000) + pausedTimeRef.current;
+      const remaining = Math.max(0, sessionDuration - elapsed);
+      setCount(remaining);
+      
+      if (remaining === 0) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
         }
-        return prev - 1;
-      });
-    }, 1000);
+      }
+    }, 100);
   }
 
   function pause() {
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
-    timerRef.current = null;
+    
+    // Calculate and store paused time
+    if (startTimeRef.current) {
+      const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      pausedTimeRef.current += elapsed;
+    }
+    
     setTimerState("paused");
   }
 
@@ -443,11 +485,16 @@ React.useEffect(() => {
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
     
-    timerRef.current = null;
+    // Reset timer state properly
+    setTimerState("stopped");
+    setSessionType("work"); // Return to work session, not break
+    pausedTimeRef.current = 0;
+    startTimeRef.current = null;
+    
     fetchTasks();
-    setSessionType("break"); 
   }
 
   // ==================== TASK MANAGEMENT ====================
@@ -504,7 +551,7 @@ React.useEffect(() => {
 
 
   
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('tasks')
     .insert([
       {
@@ -514,62 +561,105 @@ React.useEffect(() => {
       }
     ]);
   
-  
-  
-  if (error) console.error('Error saving task:', error);
+  if (error) {
+    console.error('Error saving task:', error);
+    // Fallback to localStorage if Supabase fails
+    const existingTasks = JSON.parse(localStorage.getItem('failed_tasks') || '[]');
+    const failedTask = { 
+      id: Date.now(),
+      task_name: taskName, 
+      time_worked: timeWorked,
+      created_at: new Date().toISOString(),
+      user_id: user.id,
+      sync_pending: true
+    };
+    existingTasks.push(failedTask);
+    localStorage.setItem('failed_tasks', JSON.stringify(existingTasks));
+  }
 } else {
 
 
-      // localStorage code
-      const existingTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-      const newTask = { 
-        id: Date.now(), // simple ID for localStorage
-        task_name: taskName, 
-        time_worked: timeWorked,
-        created_at: new Date().toISOString()
-      };
-      existingTasks.push(newTask);
-      localStorage.setItem('tasks', JSON.stringify(existingTasks));
+      // localStorage code with error handling
+      try {
+        const existingTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        const newTask = { 
+          id: Date.now(),
+          task_name: taskName, 
+          time_worked: timeWorked,
+          created_at: new Date().toISOString()
+        };
+        existingTasks.push(newTask);
+        localStorage.setItem('tasks', JSON.stringify(existingTasks));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
     }
     
     hasStartedRef.current = false;
   }
 }
-  function fetchTasks() {
+  async function fetchTasks() {
     if (user) {
-      // Your existing Supabase code
-      supabase
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .then(({ data, error }) => {
-          if (error) {
-            console.error('Error fetching tasks:', error);
-          } else {
-            setCompletedTasks(data || []);
-          }
-        });
-    } else {
-      const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-      const sortedTasks = tasks.sort((a: any, b: any) => {
-        // Robust date parsing with fallback
-        const getTimestamp = (task: any) => {
-          if (task.created_at) {
-            const date = new Date(task.created_at);
-            return isNaN(date.getTime()) ? task.id || 0 : date.getTime();
-          }
-          return task.id || 0;
-        };
+      try {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .order('created_at', { ascending: false });
         
-        const dateA = getTimestamp(a);
-        const dateB = getTimestamp(b);
-        return dateB - dateA; // newest first
-      });
-      setCompletedTasks(sortedTasks);
+        if (error) {
+          console.error('Error fetching tasks:', error);
+          // Try to load from localStorage as fallback
+          try {
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            setCompletedTasks(tasks);
+          } catch (localError) {
+            console.error('Error loading from localStorage:', localError);
+            setCompletedTasks([]);
+          }
+        } else {
+          setCompletedTasks(data || []);
+        }
+      } catch (networkError) {
+        console.error('Network error fetching tasks:', networkError);
+        setCompletedTasks([]);
+      }
+    } else {
+      try {
+        const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        const sortedTasks = tasks.sort((a: any, b: any) => {
+          const getTimestamp = (task: any) => {
+            if (task.created_at) {
+              const date = new Date(task.created_at);
+              return isNaN(date.getTime()) ? task.id || 0 : date.getTime();
+            }
+            return task.id || 0;
+          };
+          
+          const dateA = getTimestamp(a);
+          const dateB = getTimestamp(b);
+          return dateB - dateA;
+        });
+        setCompletedTasks(sortedTasks);
+      } catch (error) {
+        console.error('Error parsing localStorage tasks:', error);
+        localStorage.removeItem('tasks'); // Clear corrupted data
+        setCompletedTasks([]);
+      }
     }
   }
 
 async function signUp() {
+  // Basic client-side validation
+  if (!authForm.email || !authForm.password || !authForm.name) {
+    alert('Please fill in all fields');
+    return;
+  }
+  
+  if (authForm.password.length < 6) {
+    alert('Password must be at least 6 characters');
+    return;
+  }
+  
   const { error } = await supabase.auth.signUp({
     email: authForm.email,
     password: authForm.password,
@@ -581,21 +671,27 @@ async function signUp() {
   });
   
   if (error) {
-    alert(error.message); // Show the actual error message
+    alert(error.message);
   } else {
-    alert('Check your email to confirm your account!'); // Let them know to check email
+    alert('Check your email to confirm your account!');
     setShowAuthModal(false);
     setAuthForm({ name: '', email: '', password: '' });
   }
 }
 async function signIn() {
+  // Basic client-side validation
+  if (!authForm.email || !authForm.password) {
+    alert('Please enter email and password');
+    return;
+  }
+  
   const { error } = await supabase.auth.signInWithPassword({
     email: authForm.email,
     password: authForm.password
   });
   
   if (error) {
-    alert(error.message); // Show the actual error message
+    alert(error.message);
   } else {
     setShowAuthModal(false);
     setAuthForm({ name: '', email: '', password: '' });

@@ -5,7 +5,7 @@
 [] Tasks from localstorage do not migrate
 [] Implement spacebar to stop/resume
 [] Implement export to CSV
-
+[] Try out Claude Code
 
 Fixed task name persistence bug
 Implemented localStorage sorting consistency
