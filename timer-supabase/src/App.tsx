@@ -477,6 +477,20 @@ React.useEffect(() => {
     }
   };
 }, []);
+
+// Monitor for autofill attempts and clear them
+React.useEffect(() => {
+  const interval = setInterval(() => {
+    const taskInputElement = document.querySelector('input[aria-label="Task name input"]') as HTMLInputElement;
+    if (taskInputElement && taskInputElement.value !== inputValue) {
+      // Autofill detected, clear it
+      console.log('Autofill detected and cleared');
+      taskInputElement.value = inputValue;
+    }
+  }, 100);
+
+  return () => clearInterval(interval);
+}, [inputValue]);
   // ==================== TIMER LOGIC ====================
   
   function start() {
@@ -864,57 +878,118 @@ async function migrateLocalStorageToSupabase(): Promise<void> {
 
 const taskInput = timerState === "stopped" && (
   <div style={compactRowStyle}>
+    {/* Hidden honeypot input to confuse autofill */}
+    <input
+      style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+      type="text"
+      name="username"
+      autoComplete="username"
+      tabIndex={-1}
+      aria-hidden="true"
+    />
+    <input
+      style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+      type="password"
+      name="password"
+      autoComplete="current-password"
+      tabIndex={-1}
+      aria-hidden="true"
+    />
+    
     <input 
       style={taskInputStyle}
       placeholder="Enter new task"
       value={inputValue} 
-      onChange={(e) => setInputValue(e.target.value)}
+      onChange={(e) => {
+        // Clear any autofilled value and use only user input
+        if (e.target.value !== inputValue) {
+          setInputValue(e.target.value);
+        }
+      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           submit();
           start();
         }
       }}
-      // Safari autofill prevention attributes
-      autoComplete="new-password"
+      onInput={(e) => {
+        // Additional protection against autofill
+        const target = e.target as HTMLInputElement;
+        if (target.value !== inputValue) {
+          setInputValue(target.value);
+        }
+      }}
+      
+      // Comprehensive autofill prevention
+      autoComplete="off"
       autoCorrect="off"
       autoCapitalize="off"
       spellCheck="false"
       
-      // Unique name/id to prevent autofill matching
-      name={`task-input-${user?.id || 'guest'}-${baseInputId}`}
-      id={`task-input-${user?.id || 'guest'}-${baseInputId}`}
+      // Unique identifiers that change frequently
+      name={`task-field-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`}
+      id={`task-field-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`}
       
-      // Additional Safari-specific attributes
+      // Field type and input mode
       type="text"
       inputMode="text"
       enterKeyHint="go"
       
-      // Prevent password managers and form fillers
+      // Prevent all major password managers and autofill systems
       data-lpignore="true"
       data-form-type="other"
       data-1p-ignore="true"
       data-bitwarden-ignore="true"
+      data-dashlane-ignore="true"
+      data-keeper-ignore="true"
+      data-lastpass-ignore="true"
       
-      // Safari placeholder fix - force re-render on focus
+      // Browser-specific prevention
+      data-chrome-autofill="false"
+      data-firefox-autofill="false"
+      data-safari-autofill="false"
+      
+      // React to autofill attempts
       onFocus={(e) => {
-        // Force Safari to recognize the field as focused
-        e.target.style.color = '#000';
+        const target = e.target as HTMLInputElement;
         
-        // Temporary workaround for placeholder issue
-        const placeholder = e.target.placeholder;
-        e.target.placeholder = '';
+        // Clear any autofilled content on focus
         setTimeout(() => {
-          e.target.placeholder = placeholder;
+          if (target.value !== inputValue) {
+            target.value = inputValue;
+          }
+        }, 10);
+        
+        // Style reset
+        target.style.color = '#000';
+        
+        // Placeholder fix for Safari
+        const placeholder = target.placeholder;
+        target.placeholder = '';
+        setTimeout(() => {
+          target.placeholder = placeholder;
         }, 1);
       }}
       
       onBlur={(e) => {
-        // Reset color on blur if needed
-        if (!e.target.value) {
-          e.target.style.color = '';
+        const target = e.target as HTMLInputElement;
+        // Final check for autofill on blur
+        setTimeout(() => {
+          if (target.value !== inputValue) {
+            target.value = inputValue;
+          }
+        }, 10);
+        
+        // Style reset
+        if (!target.value) {
+          target.style.color = '';
         }
       }}
+      
+      // Prevent browser from storing this field
+      autoSave="off"
+      role="textbox"
+      aria-label="Task name input"
     />
   </div>
 );
