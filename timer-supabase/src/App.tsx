@@ -291,6 +291,7 @@ function Timer() {
   // Detect login state
   const [isAuthResolved, setIsAuthResolved] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [hasMigrated, setHasMigrated] = useState(false);
 
   // Auth modal state removed - now using routing
   
@@ -306,19 +307,29 @@ function Timer() {
     fetchTasks(); // Fetch after auth state is set
   });
 
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
     const wasLoggedOut = !user;
-    const isNowLoggedIn = session?.user;
-    
+    const isNowLoggedIn = !!session?.user;
+    const newUser = session?.user ?? null;
 
-  if (hasStartedRef.current) {
-    saveWorkSession();
-  }
-  
-    setUser(session?.user ?? null);
+    if (hasStartedRef.current) {
+      saveWorkSession();
+    }
     
-    if (wasLoggedOut && isNowLoggedIn) {
-      migrateLocalStorageToSupabase().then(() => fetchTasks());
+    setUser(newUser);
+    
+    if (wasLoggedOut && isNowLoggedIn && newUser && !hasMigrated) {
+      // User just logged in - attempt migration (only once)
+      const migrationSuccess = await migrateLocalStorageToSupabase(newUser as User);
+      setHasMigrated(true); // Mark as attempted to prevent multiple migrations
+      
+      if (migrationSuccess) {
+        // Show user-friendly notification about successful migration
+        setTimeout(() => {
+          alert('📝 Your previous tasks have been imported to your account!');
+        }, 1000);
+      }
+      fetchTasks();
     } else {
       fetchTasks();
     }
@@ -760,13 +771,24 @@ function deleteTask(task_id: number): void {
   }
 }
 
-async function migrateLocalStorageToSupabase(): Promise<void> {
-  const localTasks: Task[] = JSON.parse(localStorage.getItem('tasks') || '[]');
-  if (localTasks.length > 0 && user?.id) {
+async function migrateLocalStorageToSupabase(currentUser: User): Promise<boolean> {
+  try {
+    const localTasksString = localStorage.getItem('tasks');
+    if (!localTasksString || !currentUser?.id) {
+      return false; // Nothing to migrate
+    }
+    
+    const localTasks: Task[] = JSON.parse(localTasksString);
+    if (localTasks.length === 0) {
+      return false; // No tasks to migrate
+    }
+    
+    console.log(`Migrating ${localTasks.length} tasks from localStorage to Supabase...`);
+    
     const tasksWithUserId = localTasks.map((task: Task) => ({
       task_name: task.task_name,
       time_worked: task.time_worked,
-      user_id: user.id,
+      user_id: currentUser.id,
       created_at: task.created_at || new Date().toISOString()
     }));
     
@@ -776,9 +798,15 @@ async function migrateLocalStorageToSupabase(): Promise<void> {
     
     if (!error) {
       localStorage.removeItem('tasks');
+      console.log('✅ Migration successful! Local tasks moved to your account.');
+      return true;
     } else {
-      console.error('Migration failed:', error);
+      console.error('❌ Migration failed:', error);
+      return false;
     }
+  } catch (error) {
+    console.error('❌ Migration error:', error);
+    return false;
   }
 }
   // Get session type color
