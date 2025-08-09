@@ -1,6 +1,8 @@
 import React from 'react';
 import { useState, useRef } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from './supabase';
+import Login from './Login';
 
 // #region TypeScript Interfaces and Types
 
@@ -236,38 +238,12 @@ const compactInputStyle = {
 // Login/Logout styles
 
 
-const modalOverlayStyle = {
-  position: "fixed" as const,
-  top: 0,
-  left: 0,
-  width: "100%",
-  height: "100%",
-  backgroundColor: "rgba(0,0,0,0.5)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 2000
-};
-
-const modalStyle = {
-  backgroundColor: "white",
-  padding: "30px",
-  borderRadius: "12px",
-  width: "90%",
-  maxWidth: "400px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
-};
-
-const modalFormStyle = {
-  display: "flex",
-  flexDirection: "column" as const,
-  gap: "15px"
-};
+// Modal styles removed - now using separate Login page
 
 
 // #endregion
 
-function App() {
+function Timer() {
   function getSessionDuration(type: SessionType): number {
     switch (type) {
       case SessionType.WORK:
@@ -316,13 +292,7 @@ function App() {
   const [isAuthResolved, setIsAuthResolved] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authForm, setAuthForm] = useState<AuthForm>({
-    name: '',
-    email: '',
-    password: ''
-  });
-  const [isSignUp, setIsSignUp] = useState(false);
+  // Auth modal state removed - now using routing
   
 
   // #endregion
@@ -724,56 +694,7 @@ React.useEffect(() => {
     }
   }
 
-async function signUp() {
-  // Basic client-side validation
-  if (!authForm.email || !authForm.password || !authForm.name) {
-    alert('Please fill in all fields');
-    return;
-  }
-  
-  if (authForm.password.length < 6) {
-    alert('Password must be at least 6 characters');
-    return;
-  }
-  
-  const { error } = await supabase.auth.signUp({
-    email: authForm.email,
-    password: authForm.password,
-    options: {
-      data: {
-        name: authForm.name
-      }
-    }
-  });
-  
-  if (error) {
-    alert(error.message);
-  } else {
-    alert('Check your email to confirm your account!');
-    setShowAuthModal(false);
-    setAuthForm({ name: '', email: '', password: '' });
-  }
-}
-async function signIn() {
-  // Basic client-side validation
-  if (!authForm.email || !authForm.password) {
-    alert('Please enter email and password');
-    return;
-  }
-  
-  const { error } = await supabase.auth.signInWithPassword({
-    email: authForm.email,
-    password: authForm.password
-  });
-  
-  if (error) {
-    alert(error.message);
-  } else {
-    setShowAuthModal(false);
-    setAuthForm({ name: '', email: '', password: '' });
-    fetchTasks();
-  }
-}
+// Auth functions moved to Login component
 
 async function signOut() {
   await supabase.auth.signOut();
@@ -1023,14 +944,13 @@ const timerDisplay = (
   );
 const buttonGroup = (
   <div style={buttonGroupStyle}>
-    {/* Login button on the left (only when not logged in) */}
+    {/* Login link on the left (only when not logged in) */}
     {!user && (
-      <button 
-        style={secondaryButtonStyle}
-        onClick={() => setShowAuthModal(true)}
-      >
-        Log in
-      </button>
+      <Link to="/login" style={{textDecoration: 'none'}}>
+        <button style={secondaryButtonStyle}>
+          Log in
+        </button>
+      </Link>
     )}
 
     {/* Start/Pause/Resume button */}
@@ -1150,66 +1070,7 @@ const buttonGroup = (
 
   // ==================== RENDER ====================
 
-  const handleAuthKeyDown = (e: React.KeyboardEvent) => {
-  if (e.key === 'Enter') {
-    if (isSignUp) {
-      signUp();
-    } else {
-      signIn();
-    }
-  }
-};
-
-  const authSection = (
-  <>
-    {showAuthModal && (
-      <div style={modalOverlayStyle} onClick={() => setShowAuthModal(false)}>
-        <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-          <h3>{isSignUp ? 'Sign Up' : 'Sign In'}</h3>
-          <div style={modalFormStyle}>
-            {isSignUp && (
-              <input
-                style={inputStyle}
-                placeholder="Name"
-                value={authForm.name}
-                onChange={(e) => setAuthForm({...authForm, name: e.target.value})}
-                onKeyDown={handleAuthKeyDown} 
-              />
-            )}
-            <input
-              style={inputStyle}
-              placeholder="Email"
-              type="email"
-              value={authForm.email}
-              onChange={(e) => setAuthForm({...authForm, email: e.target.value})}
-              onKeyDown={handleAuthKeyDown} 
-            />
-            <input
-              style={inputStyle}
-              placeholder="Password"
-              type="password"
-              value={authForm.password}
-              onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
-              onKeyDown={handleAuthKeyDown} 
-            />
-            <button 
-              style={primaryButtonStyle}
-              onClick={isSignUp ? signUp : signIn}
-            >
-              {isSignUp ? 'Sign Up' : 'Sign In'}
-            </button>
-            <button 
-              style={secondaryButtonStyle}
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-  </>
-);
+// Auth section removed - now using routing
 const timerSection = (
   <div style={rightColumnStyle}>
     {/* Welcome message and logout link above session header (only when logged in) */}
@@ -1273,7 +1134,6 @@ const timerSection = (
 if (isMobile) {
   return (
     <div style={containerStyle}>
-      {authSection}
       {timerSection}
       {taskList}
     </div>
@@ -1283,13 +1143,23 @@ if (isMobile) {
 // Desktop version
 return (
   <div style={webContainerStyle}>
-    {authSection}
     <div style={webFrameStyle}>
       {timerSection}
       {taskList}
     </div>
   </div>
 );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Timer />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
