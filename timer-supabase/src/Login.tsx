@@ -11,16 +11,18 @@ const containerStyle = {
   backgroundColor: "#e9ecef",
   alignItems: "center",
   justifyContent: "center",
-  padding: "20px"
+  padding: "10px" // Reduced padding for mobile
 };
 
 const cardStyle = {
   backgroundColor: "white",
-  padding: "40px",
+  padding: "20px", // Reduced from 40px for mobile
   borderRadius: "16px",
   width: "100%",
   maxWidth: "400px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.15)"
+  boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+  margin: "10px", // Added margin for mobile spacing
+  boxSizing: "border-box" as const // Ensure padding doesn't overflow
 };
 
 const formStyle = {
@@ -88,6 +90,17 @@ export default function Login() {
   });
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Handle window resize for responsive design
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   async function signUp() {
     // Basic client-side validation
@@ -152,9 +165,21 @@ export default function Login() {
     }
   };
 
+  // Dynamic styles based on screen size
+  const responsiveCardStyle = {
+    ...cardStyle,
+    padding: isMobile ? "15px" : "30px",
+    margin: isMobile ? "5px" : "20px"
+  };
+
+  const responsiveContainerStyle = {
+    ...containerStyle,
+    padding: isMobile ? "5px" : "20px"
+  };
+
   return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>
+    <div style={responsiveContainerStyle}>
+      <div style={responsiveCardStyle}>
         <h1 style={titleStyle}>
           🍅 Life in Focus
         </h1>
