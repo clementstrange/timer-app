@@ -548,6 +548,7 @@ React.useEffect(() => {
     // Reset timer state properly
     setTimerState("stopped");
     setSessionType(SessionType.WORK); // Return to work session, not break
+    setCount(getSessionDuration(SessionType.WORK)); // Reset timer to full 25 minutes
     pausedTimeRef.current = 0;
     startTimeRef.current = null;
     
