@@ -1114,7 +1114,7 @@ const timerSection = (
       fontSize: "12px",
       color: "#999",
       textAlign: "center" as const,
-      margin: "5px 0",
+      margin: "5px 0 20px 0", // Increased bottom margin from 5px to 20px
       opacity: 0.7
     }}>
       Press <kbd style={{
