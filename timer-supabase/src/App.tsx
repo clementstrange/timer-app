@@ -265,7 +265,7 @@ function Timer() {
   const [completedPomos, setCompletedPomos] = useState(0);
 
   // Task state  
-  const [baseInputId] = useState(Date.now());
+  // const [baseInputId] = useState(Date.now()); // Reserved for future autofill prevention
   const [task, setTask] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
@@ -930,7 +930,6 @@ const taskInput = timerState === "stopped" && (
       
       // Prevent browser from storing this field
       autoSave="off"
-      role="textbox"
       aria-label="Task name input"
     />
   </div>
