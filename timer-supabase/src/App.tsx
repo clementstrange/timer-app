@@ -368,26 +368,17 @@ function Timer() {
     currentSessionTypeRef.current = sessionType;
   }, [sessionType]);
 
-  // Handle session type changes and timer restart
+  // Handle manual session type changes (like reset button)
   React.useEffect(() => {
     const newDuration = getSessionDuration(sessionType);
-    setCount(newDuration);
-    pausedTimeRef.current = 0;
     
-    if (timerState === "running") {
-      // Clear existing timer
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      // Start new timer with accurate timing
-      startTimeRef.current = Date.now();
-      timerRef.current = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000) + pausedTimeRef.current;
-        const remaining = Math.max(0, newDuration - elapsed);
-        setCount(remaining);
-      }, 100); // More frequent updates for accuracy
+    // Only reset count and timer if we're in stopped state (manual changes)
+    // Automatic transitions handle their own timing
+    if (timerState === "stopped") {
+      setCount(newDuration);
+      pausedTimeRef.current = 0;
     }
-  }, [sessionType]);
+  }, [sessionType, timerState]);
 
   // Handle session transitions when timer reaches 0
   React.useEffect(() => {
@@ -404,19 +395,42 @@ function Timer() {
         });
         setCompletedPomos(prev => {
           const newCount = prev + 1;
-          if (newCount === 4) {
-            setSessionType(SessionType.LONG_BREAK);
-            setTimerState("running"); // Auto-start break
-            return 0;
-          } else {
-            setSessionType(SessionType.BREAK);
-            setTimerState("running"); // Auto-start break
-            return newCount;
+          const nextSessionType = newCount === 4 ? SessionType.LONG_BREAK : SessionType.BREAK;
+          const breakDuration = getSessionDuration(nextSessionType);
+          
+          // Set new session type and start break timer immediately
+          setSessionType(nextSessionType);
+          setTimerState("running");
+          setCount(breakDuration);
+          
+          // Start the break timer with proper timing
+          startTimeRef.current = Date.now();
+          pausedTimeRef.current = 0;
+          
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
           }
+          
+          timerRef.current = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000);
+            const remaining = Math.max(0, breakDuration - elapsed);
+            setCount(remaining);
+            
+            if (remaining === 0) {
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+              }
+            }
+          }, 100);
+          
+          return newCount === 4 ? 0 : newCount;
         });
       } else if (sessionType === SessionType.BREAK || sessionType === SessionType.LONG_BREAK) {
+        // Break finished, return to work (but don't auto-start)
         setSessionType(SessionType.WORK);
-        setTimerState("stopped"); // User must manually start next work session
+        setTimerState("stopped"); 
+        setCount(getSessionDuration(SessionType.WORK)); // Reset to 25 minutes
       }
       
       // Reset timing refs
@@ -473,7 +487,7 @@ React.useEffect(() => {
   return () => clearInterval(interval);
 }, [inputValue]);
 
-// Spacebar keyboard shortcut for start/pause/resume
+// Spacebar keyboard shortcut for start/pause/resume and Enter for finish
 React.useEffect(() => {
   const handleKeyDown = (event: KeyboardEvent) => {
     // Only trigger if not typing in an input field
@@ -488,11 +502,16 @@ React.useEffect(() => {
       event.preventDefault(); // Prevent page scroll
       handleStartPauseResume();
     }
+    
+    if (event.code === 'Enter' && !isInputFocused && sessionType === SessionType.WORK && (timerState === 'running' || timerState === 'paused')) {
+      event.preventDefault();
+      reset(); // Finish and submit the session
+    }
   };
 
   document.addEventListener('keydown', handleKeyDown);
   return () => document.removeEventListener('keydown', handleKeyDown);
-}, [timerState, task, inputValue]); // Dependencies needed for handleStartPauseResume
+}, [timerState, task, inputValue, sessionType]); // Dependencies needed for handleStartPauseResume and reset
   // ==================== TIMER LOGIC ====================
   
   function start() {
@@ -547,8 +566,7 @@ React.useEffect(() => {
     
     // Reset timer state properly
     setTimerState("stopped");
-    setSessionType(SessionType.WORK); // Return to work session, not break
-    setCount(getSessionDuration(SessionType.WORK)); // Reset timer to full 25 minutes
+    setSessionType(SessionType.WORK); // Return to work session, useEffect will reset count
     pausedTimeRef.current = 0;
     startTimeRef.current = null;
     
