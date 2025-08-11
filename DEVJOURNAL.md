@@ -1,8 +1,21 @@
+# Development Journal - 9 August 2025
+
+[x] Active default task from last time remains. Check this one!
+[x] The autofill still wants to fill in. 
+[x] Tasks from localstorage do not migrate
+[x] Implement spacebar to stop/resume
+[] Implement export to CSV
+[x] Try out Claude Code
+[] Integrate sou`nd notification
+[] Install paywall
+[x] Enter button does not work when submitting task 
+
+
 # Development Journal - 8 August 2025
 
 [x] Active default task from last time remains. Check this one!
-[] The autofill still wants to fill in. 
-[] Tasks from localstorage do not migrate
+[x] The autofill still wants to fill in. 
+[x] Tasks from localstorage do not migrate
 [x] Implement spacebar to stop/resume
 [] Implement export to CSV
 [x] Try out Claude Code
