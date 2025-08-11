@@ -293,6 +293,10 @@ function Timer() {
   const [user, setUser] = useState<User | null>(null);
   const [hasMigrated, setHasMigrated] = useState(false);
 
+  // Stats dashboard state
+  const [showStats, setShowStats] = useState(false);
+  const [statsTimeframe, setStatsTimeframe] = useState<'today' | 'alltime'>('today');
+
   // Auth modal state removed - now using routing
   
 
@@ -1107,73 +1111,225 @@ const buttonGroup = (
   </div>
 );
 
+  // Stats calculation functions
+  const getTodayStats = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayTasks = completedTasks.filter(task => {
+      const taskDate = new Date(task.created_at).toISOString().split('T')[0];
+      return taskDate === today;
+    });
+    
+    return calculateStats(todayTasks);
+  };
+
+  const getAllTimeStats = () => {
+    return calculateStats(completedTasks);
+  };
+
+  const calculateStats = (tasks: Task[]) => {
+    const totalTime = tasks.reduce((sum, task) => sum + task.time_worked, 0);
+    
+    // Group by task name (normalized - remove spaces, ignore case)
+    const taskGroups: { [key: string]: { name: string; time: number } } = {};
+    
+    tasks.forEach(task => {
+      const normalizedName = task.task_name.replace(/\s+/g, '').toLowerCase();
+      if (taskGroups[normalizedName]) {
+        taskGroups[normalizedName].time += task.time_worked;
+      } else {
+        taskGroups[normalizedName] = {
+          name: task.task_name, // Keep original name for display
+          time: task.time_worked
+        };
+      }
+    });
+    
+    const taskTimeList = Object.values(taskGroups).sort((a, b) => b.time - a.time);
+    
+    return { totalTime, taskTimeList };
+  };
+
   const taskList = (
     <div style={taskListStyle}>
-      <h4 style={{margin: "0 0 15px 0", color: "#333"}}>Recent Tasks</h4>
-      {completedTasks.length > 0 ? (
-        completedTasks.map((task) => (
-        <div key={task.id} style={taskItemStyle}>
-            {editingTaskId === task.id ? (
-              <div style={editFormStyle}>
-                <input
-                  style={inputStyle}
-                  placeholder="Task name"
-                  value={editTaskName}
-                  onChange={(e) => setEditTaskName(e.target.value)}
-                />
-                <div style={editInputRowStyle}>
-                  <input
-                    style={compactInputStyle}
-                    type="number"
-                    placeholder="Seconds"
-                    value={editTimeWorked}
-                    onChange={(e) => setEditTimeWorked(Number(e.target.value))}
-                  />
-                  <button 
-                    style={successButtonStyle}
-                    onClick={() => saveTask(task.id)}
-                  >
-                    Save
-                  </button>
-                  <button 
-                    style={secondaryButtonStyle}
-                    onClick={() => setEditingTaskId(null)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={taskItemContentStyle}>
-                <div style={{flex: 1, minWidth: "120px"}}>
-                  <div style={{fontWeight: "bold", marginBottom: "4px"}}>
-                    {task.task_name}
-                  </div>
-                  <div style={{color: "#666", fontSize: "14px"}}>
-                    {formatTime(task.time_worked)}
-                  </div>
-                </div>
-                <div style={taskButtonsStyle}>
-                  <button 
-                    style={secondaryButtonStyle}
-                    onClick={() => editTask(task.id)}
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    style={dangerButtonStyle}
-                    onClick={() => deleteTask(task.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )}
+      <div style={{display: "flex", gap: "10px", marginBottom: "15px"}}>
+        <button 
+          style={{
+            ...buttonStyle,
+            backgroundColor: !showStats ? "#007bff" : "transparent",
+            color: !showStats ? "white" : "#666",
+            border: !showStats ? "none" : "1px solid #ddd",
+            padding: "8px 16px",
+            fontSize: "16px",
+            fontWeight: "bold",
+            borderRadius: "8px"
+          }}
+          onClick={() => setShowStats(false)}
+        >
+          Recent Tasks
+        </button>
+        <button 
+          style={{
+            ...buttonStyle,
+            backgroundColor: showStats ? "#007bff" : "transparent",
+            color: showStats ? "white" : "#666", 
+            border: showStats ? "none" : "1px solid #ddd",
+            padding: "8px 16px",
+            fontSize: "16px",
+            fontWeight: "bold",
+            borderRadius: "8px"
+          }}
+          onClick={() => setShowStats(true)}
+        >
+          Stats
+        </button>
+      </div>
+      {showStats ? (
+        // Stats view
+        <div>
+          {/* Today/All Time toggle buttons */}
+          <div style={{display: "flex", gap: "10px", marginBottom: "20px", justifyContent: "center"}}>
+            <button 
+              style={{
+                ...buttonStyle,
+                backgroundColor: statsTimeframe === 'today' ? "#007bff" : "#f8f9fa",
+                color: statsTimeframe === 'today' ? "white" : "#666",
+                padding: "8px 16px",
+                fontSize: "14px"
+              }}
+              onClick={() => setStatsTimeframe('today')}
+            >
+              Today
+            </button>
+            <button 
+              style={{
+                ...buttonStyle,
+                backgroundColor: statsTimeframe === 'alltime' ? "#007bff" : "#f8f9fa", 
+                color: statsTimeframe === 'alltime' ? "white" : "#666",
+                padding: "8px 16px",
+                fontSize: "14px"
+              }}
+              onClick={() => setStatsTimeframe('alltime')}
+            >
+              All Time
+            </button>
           </div>
-        ))
+
+          {/* Stats content */}
+          {(() => {
+            const stats = statsTimeframe === 'today' ? getTodayStats() : getAllTimeStats();
+            
+            return (
+              <div>
+                {/* Total sessions time */}
+                <div style={{marginBottom: "20px", textAlign: "center"}}>
+                  <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
+                    Total Sessions Time
+                  </div>
+                  <div style={{fontSize: "24px", color: "#007bff", fontWeight: "bold"}}>
+                    {formatTime(stats.totalTime)}
+                  </div>
+                </div>
+
+                {/* Time per task */}
+                <div>
+                  {stats.taskTimeList.length > 0 ? (
+                    stats.taskTimeList.map((taskGroup, index) => (
+                      <div key={index} style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 12px",
+                        backgroundColor: "#f8f9fa",
+                        borderRadius: "6px",
+                        marginBottom: "8px"
+                      }}>
+                        <div style={{fontWeight: "500", color: "#333"}}>
+                          {taskGroup.name}
+                        </div>
+                        <div style={{color: "#007bff", fontWeight: "bold"}}>
+                          {formatTime(taskGroup.time)}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
+                      No tasks {statsTimeframe === 'today' ? 'today' : 'yet'}.
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
       ) : (
-        <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
-          No tasks yet.
+        // Tasks view
+        <div>
+          {completedTasks.length > 0 ? (
+            completedTasks.map((task) => (
+            <div key={task.id} style={taskItemStyle}>
+                {editingTaskId === task.id ? (
+                  <div style={editFormStyle}>
+                    <input
+                      style={inputStyle}
+                      placeholder="Task name"
+                      value={editTaskName}
+                      onChange={(e) => setEditTaskName(e.target.value)}
+                    />
+                    <div style={editInputRowStyle}>
+                      <input
+                        style={compactInputStyle}
+                        type="number"
+                        placeholder="Seconds"
+                        value={editTimeWorked}
+                        onChange={(e) => setEditTimeWorked(Number(e.target.value))}
+                      />
+                      <button 
+                        style={successButtonStyle}
+                        onClick={() => saveTask(task.id)}
+                      >
+                        Save
+                      </button>
+                      <button 
+                        style={secondaryButtonStyle}
+                        onClick={() => setEditingTaskId(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={taskItemContentStyle}>
+                    <div style={{flex: 1, minWidth: "120px"}}>
+                      <div style={{fontWeight: "bold", marginBottom: "4px"}}>
+                        {task.task_name}
+                      </div>
+                      <div style={{color: "#666", fontSize: "14px"}}>
+                        {formatTime(task.time_worked)}
+                      </div>
+                    </div>
+                    <div style={taskButtonsStyle}>
+                      <button 
+                        style={secondaryButtonStyle}
+                        onClick={() => editTask(task.id)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        style={dangerButtonStyle}
+                        onClick={() => deleteTask(task.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
+              No tasks yet.
+            </div>
+          )}
         </div>
       )}
     </div>
