@@ -487,7 +487,7 @@ React.useEffect(() => {
   return () => clearInterval(interval);
 }, [inputValue]);
 
-// Spacebar keyboard shortcut for start/pause/resume and Enter for finish
+// Keyboard shortcuts: Enter to start/finish, Space to pause/resume (only when running)
 React.useEffect(() => {
   const handleKeyDown = (event: KeyboardEvent) => {
     // Only trigger if not typing in an input field
@@ -498,20 +498,79 @@ React.useEffect(() => {
       (activeElement as HTMLElement).contentEditable === 'true'
     );
     
-    if (event.code === 'Space' && !isInputFocused) {
+    // Spacebar only works when timer is running or paused (not when stopped)
+    if (event.code === 'Space' && !isInputFocused && timerState !== 'stopped') {
       event.preventDefault(); // Prevent page scroll
-      handleStartPauseResume();
+      if (timerState === 'running') {
+        // Pause logic (inline)
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        
+        // Calculate and store paused time
+        if (startTimeRef.current) {
+          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+          pausedTimeRef.current += elapsed;
+        }
+        
+        setTimerState("paused");
+      } else if (timerState === 'paused') {
+        // Resume logic (inline)
+        hasStartedRef.current = true;
+        setTimerState("running");
+        
+        // Clear existing timer
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+        
+        // Start timer with accurate timing
+        startTimeRef.current = Date.now();
+        const sessionDuration = getSessionDuration(sessionType);
+        
+        timerRef.current = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000) + pausedTimeRef.current;
+          const remaining = Math.max(0, sessionDuration - elapsed);
+          setCount(remaining);
+          
+          if (remaining === 0) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+          }
+        }, 100);
+      }
     }
     
-    if (event.code === 'Enter' && !isInputFocused && sessionType === SessionType.WORK && (timerState === 'running' || timerState === 'paused')) {
+    // Enter key: only for finishing running/paused work sessions
+    // When stopped, ALL Enter key handling should be done by the task input field
+    if (event.code === 'Enter' && !isInputFocused && timerState !== 'stopped') {
       event.preventDefault();
-      reset(); // Finish and submit the session
+      if (sessionType === SessionType.WORK && (timerState === 'running' || timerState === 'paused')) {
+        // Finish work session (inline implementation)
+        saveWorkSession().then(() => {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          
+          // Reset timer state properly
+          setTimerState("stopped");
+          setSessionType(SessionType.WORK);
+          pausedTimeRef.current = 0;
+          startTimeRef.current = null;
+          
+          fetchTasks();
+        });
+      }
     }
   };
 
   document.addEventListener('keydown', handleKeyDown);
   return () => document.removeEventListener('keydown', handleKeyDown);
-}, [timerState, task, inputValue, sessionType]); // Dependencies needed for handleStartPauseResume and reset
+}, [timerState, sessionType, saveWorkSession, fetchTasks, getSessionDuration]); // Dependencies for inline implementations
   // ==================== TIMER LOGIC ====================
   
   function start() {
@@ -577,8 +636,10 @@ React.useEffect(() => {
   
   function submit() {
     saveWorkSession();
-    setTask(inputValue.trim() ? inputValue : "Work Session");
-    currentTaskRef.current = inputValue.trim() ? inputValue : "Work Session";
+    const trimmedValue = inputValue.trim();
+    const taskName = trimmedValue !== "" ? trimmedValue : "Work Session";
+    setTask(taskName);
+    currentTaskRef.current = taskName;
     setInputValue(""); // Clear the input
   }
 
@@ -897,6 +958,10 @@ const taskInput = timerState === "stopped" && (
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
+          e.preventDefault(); // Prevent default browser behavior
+          e.stopPropagation(); // Prevent event from bubbling to global handler
+          
+          // Use the same logic as Start button: submit() then start()
           submit();
           start();
         }
@@ -1156,22 +1221,76 @@ const timerSection = (
     {taskInput}
     {timerDisplay}
     
-    {/* Spacebar hint */}
+    {/* Keyboard shortcuts hints */}
     <div style={{
       fontSize: "12px",
       color: "#999",
       textAlign: "center" as const,
-      margin: "5px 0 20px 0", // Increased bottom margin from 5px to 20px
+      margin: "5px 0 20px 0",
       opacity: 0.7
     }}>
-      Press <kbd style={{
-        backgroundColor: "#f5f5f5",
-        border: "1px solid #ccc",
-        borderRadius: "3px",
-        padding: "2px 6px",
-        fontSize: "11px",
-        fontFamily: "monospace"
-      }}>Space</kbd> to {timerState === "stopped" ? "start" : timerState === "running" ? "pause" : "resume"}
+      {timerState === "stopped" ? (
+        <div>
+          Press <kbd style={{
+            backgroundColor: "#f5f5f5",
+            border: "1px solid #ccc",
+            borderRadius: "3px",
+            padding: "2px 6px",
+            fontSize: "11px",
+            fontFamily: "monospace"
+          }}>Enter</kbd> to Start
+        </div>
+      ) : timerState === "running" ? (
+        <div style={{display: "flex", flexDirection: "column" as const, gap: "8px"}}>
+          <div>
+            Press <kbd style={{
+              backgroundColor: "#f5f5f5",
+              border: "1px solid #ccc",
+              borderRadius: "3px",
+              padding: "2px 6px",
+              fontSize: "11px",
+              fontFamily: "monospace"
+            }}>Space</kbd> to Pause
+          </div>
+          {sessionType === SessionType.WORK && (
+            <div>
+              Press <kbd style={{
+                backgroundColor: "#f5f5f5",
+                border: "1px solid #ccc",
+                borderRadius: "3px",
+                padding: "2px 6px",
+                fontSize: "11px",
+                fontFamily: "monospace"
+              }}>Enter</kbd> to Finish
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{display: "flex", flexDirection: "column" as const, gap: "8px"}}>
+          <div>
+            Press <kbd style={{
+              backgroundColor: "#f5f5f5",
+              border: "1px solid #ccc",
+              borderRadius: "3px",
+              padding: "2px 6px",
+              fontSize: "11px",
+              fontFamily: "monospace"
+            }}>Space</kbd> to Resume
+          </div>
+          {sessionType === SessionType.WORK && (
+            <div>
+              Press <kbd style={{
+                backgroundColor: "#f5f5f5",
+                border: "1px solid #ccc",
+                borderRadius: "3px",
+                padding: "2px 6px",
+                fontSize: "11px",
+                fontFamily: "monospace"
+              }}>Enter</kbd> to Finish
+            </div>
+          )}
+        </div>
+      )}
     </div>
     
     {buttonGroup}
