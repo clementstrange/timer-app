@@ -1221,27 +1221,16 @@ const timerSection = (
     {taskInput}
     {timerDisplay}
     
-    {/* Keyboard shortcuts hints */}
-    <div style={{
-      fontSize: "12px",
-      color: "#999",
-      textAlign: "center" as const,
-      margin: "5px 0 20px 0",
-      opacity: 0.7
-    }}>
-      {timerState === "stopped" ? (
-        <div>
-          Press <kbd style={{
-            backgroundColor: "#f5f5f5",
-            border: "1px solid #ccc",
-            borderRadius: "3px",
-            padding: "2px 6px",
-            fontSize: "11px",
-            fontFamily: "monospace"
-          }}>Enter</kbd> to Start
-        </div>
-      ) : timerState === "running" ? (
-        <div style={{display: "flex", flexDirection: "column" as const, gap: "8px"}}>
+    {/* Keyboard shortcuts hints - only show on desktop */}
+    {!isMobile && (
+      <div style={{
+        fontSize: "12px",
+        color: "#999",
+        textAlign: "center" as const,
+        margin: "5px 0 20px 0",
+        opacity: 0.7
+      }}>
+        {timerState === "stopped" ? (
           <div>
             Press <kbd style={{
               backgroundColor: "#f5f5f5",
@@ -1250,9 +1239,10 @@ const timerSection = (
               padding: "2px 6px",
               fontSize: "11px",
               fontFamily: "monospace"
-            }}>Space</kbd> to Pause
+            }}>Enter</kbd> to Start
           </div>
-          {sessionType === SessionType.WORK && (
+        ) : timerState === "running" ? (
+          <div style={{display: "flex", flexDirection: "column" as const, gap: "8px"}}>
             <div>
               Press <kbd style={{
                 backgroundColor: "#f5f5f5",
@@ -1261,23 +1251,23 @@ const timerSection = (
                 padding: "2px 6px",
                 fontSize: "11px",
                 fontFamily: "monospace"
-              }}>Enter</kbd> to Finish
+              }}>Space</kbd> to Pause
             </div>
-          )}
-        </div>
-      ) : (
-        <div style={{display: "flex", flexDirection: "column" as const, gap: "8px"}}>
-          <div>
-            Press <kbd style={{
-              backgroundColor: "#f5f5f5",
-              border: "1px solid #ccc",
-              borderRadius: "3px",
-              padding: "2px 6px",
-              fontSize: "11px",
-              fontFamily: "monospace"
-            }}>Space</kbd> to Resume
+            {sessionType === SessionType.WORK && (
+              <div>
+                Press <kbd style={{
+                  backgroundColor: "#f5f5f5",
+                  border: "1px solid #ccc",
+                  borderRadius: "3px",
+                  padding: "2px 6px",
+                  fontSize: "11px",
+                  fontFamily: "monospace"
+                }}>Enter</kbd> to Finish
+              </div>
+            )}
           </div>
-          {sessionType === SessionType.WORK && (
+        ) : (
+          <div style={{display: "flex", flexDirection: "column" as const, gap: "8px"}}>
             <div>
               Press <kbd style={{
                 backgroundColor: "#f5f5f5",
@@ -1286,12 +1276,24 @@ const timerSection = (
                 padding: "2px 6px",
                 fontSize: "11px",
                 fontFamily: "monospace"
-              }}>Enter</kbd> to Finish
+              }}>Space</kbd> to Resume
             </div>
-          )}
-        </div>
-      )}
-    </div>
+            {sessionType === SessionType.WORK && (
+              <div>
+                Press <kbd style={{
+                  backgroundColor: "#f5f5f5",
+                  border: "1px solid #ccc",
+                  borderRadius: "3px",
+                  padding: "2px 6px",
+                  fontSize: "11px",
+                  fontFamily: "monospace"
+                }}>Enter</kbd> to Finish
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )}
     
     {buttonGroup}
   </div>
