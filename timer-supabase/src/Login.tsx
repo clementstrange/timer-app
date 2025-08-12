@@ -184,9 +184,9 @@ export default function Login() {
           🍅 Life in Focus
         </h1>
         
-        <h2 style={{ textAlign: 'center', marginBottom: '30px', color: '#666' }}>
-          {isSignUp ? 'Create Account' : 'Welcome Back'}
-        </h2>
+        {/* <h2 style={{ textAlign: 'center', marginBottom: '30px', color: '#666' }}>
+          {isSignUp ? 'Create Account' : 'Sign in'}
+        </h2> */}
         
         <div style={formStyle}>
           {isSignUp && (

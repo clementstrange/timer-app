@@ -4,6 +4,13 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from './supabase';
 import Login from './Login';
 
+// Type declaration for webkit audio context
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext;
+  }
+}
+
 // #region TypeScript Interfaces and Types
 
 export enum SessionType {
@@ -246,14 +253,181 @@ const compactInputStyle = {
 // #endregion
 
 function Timer() {
+  // Global audio context to maintain across calls
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  
+  // Initialize audio context on first user interaction
+  function initializeAudio() {
+    if (audioContext) return;
+    
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        const ctx = new AudioContextClass();
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            setAudioContext(ctx);
+          });
+        } else {
+          setAudioContext(ctx);
+        }
+      }
+    } catch (error) {
+      // Silent fail
+    }
+  }
+
+  // Bell-like tone with natural decay
+  function playBellTone(frequency: number, duration: number) {
+    if (!audioContext) return;
+    
+    try {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      const filterNode = audioContext.createBiquadFilter();
+      
+      oscillator.connect(filterNode);
+      filterNode.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+      
+      filterNode.type = 'lowpass';
+      filterNode.frequency.value = frequency * 3;
+      filterNode.Q.value = 2;
+      
+      const now = audioContext.currentTime;
+      const totalDuration = duration / 1000;
+      
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.2, now + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + totalDuration);
+      
+      oscillator.start(now);
+      oscillator.stop(now + totalDuration);
+    } catch (error) {
+      // Silent fail
+    }
+  }
+  
+  // Soft beep tone
+  function playBeepTone(frequency: number, duration: number) {
+    if (!audioContext) return;
+    
+    try {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      const filterNode = audioContext.createBiquadFilter();
+      
+      oscillator.connect(filterNode);
+      filterNode.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Use sine wave for softer sound
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+      
+      // Add low-pass filter to make it gentler
+      filterNode.type = 'lowpass';
+      filterNode.frequency.value = frequency * 1.5;
+      filterNode.Q.value = 0.5;
+      
+      const now = audioContext.currentTime;
+      const totalDuration = duration / 1000;
+      
+      // Gentle envelope - much softer volume
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.05, now + 0.02);
+      gainNode.gain.linearRampToValueAtTime(0.05, now + totalDuration - 0.02);
+      gainNode.gain.linearRampToValueAtTime(0, now + totalDuration);
+      
+      oscillator.start(now);
+      oscillator.stop(now + totalDuration);
+    } catch (error) {
+      // Silent fail
+    }
+  }
+  
+  // Enhanced Web Audio function for natural-sounding tones
+  function playWebAudioTone(frequency: number, duration: number, type: 'work' | 'break' | 'longbreak' = 'work') {
+    if (!audioContext) return;
+    
+    try {      
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      const filterNode = audioContext.createBiquadFilter();
+      
+      oscillator.connect(filterNode);
+      filterNode.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+      
+      filterNode.type = 'lowpass';
+      filterNode.frequency.value = frequency * 2;
+      filterNode.Q.value = 1;
+      
+      const now = audioContext.currentTime;
+      const attackTime = 0.1;
+      const decayTime = duration/1000 - 0.2;
+      
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.15, now + attackTime);
+      gainNode.gain.linearRampToValueAtTime(0.1, now + attackTime + decayTime);
+      gainNode.gain.linearRampToValueAtTime(0, now + duration/1000);
+      
+      oscillator.start(now);
+      oscillator.stop(now + duration/1000);
+      
+    } catch (error) {
+      // Silent fail
+    }
+  }
+
+  // Sound notification functions
+  function playWorkEndSound() {
+    // Bell sound: Ring three times with decay
+    [0, 400, 800].forEach((delay) => {
+      setTimeout(() => {
+        playBellTone(523, 600 - (delay/10)); // C5 with decreasing duration
+      }, delay);
+    });
+  }
+  
+  function playBreakEndSound() {
+    // Simple beep: Three quick beeps
+    [0, 200, 400].forEach((delay) => {
+      setTimeout(() => {
+        playBeepTone(880, 150); // A5 short beeps
+      }, delay);
+    });
+  }
+  
+  function playLongBreakEndSound() {
+    // Celebratory three-note ascending chord: C4 -> E4 -> G4 (major triad)
+    const notes = [
+      { freq: 262, delay: 0 },    // C4
+      { freq: 330, delay: 200 },  // E4  
+      { freq: 392, delay: 400 }   // G4
+    ];
+    
+    notes.forEach(note => {
+      setTimeout(() => {
+        playWebAudioTone(note.freq, 800, 'longbreak');
+      }, note.delay);
+    });
+  }
+
   function getSessionDuration(type: SessionType): number {
     switch (type) {
       case SessionType.WORK:
-        return 25; // 25 minutes in seconds
+        return 6; // 6 seconds for testing
       case SessionType.BREAK:
-        return 5; // 5 minutes in seconds
+        return 3; // 3 seconds for testing
       case SessionType.LONG_BREAK:
-        return 10; // 10 minutes in seconds
+        return 4; // 4 seconds for testing
       default:
         throw new Error(`Unknown session type: ${type}`);
     }
@@ -396,6 +570,9 @@ function Timer() {
       }
       
       if (sessionType === SessionType.WORK) {
+        // Play sound when work session ends naturally
+        playWorkEndSound();
+        
         saveWorkSession().then(() => {
           fetchTasks();
         });
@@ -433,6 +610,13 @@ function Timer() {
           return newCount === 4 ? 0 : newCount;
         });
       } else if (sessionType === SessionType.BREAK || sessionType === SessionType.LONG_BREAK) {
+        // Play appropriate sound when break ends naturally
+        if (sessionType === SessionType.LONG_BREAK) {
+          playLongBreakEndSound();
+        } else {
+          playBreakEndSound();
+        }
+        
         // Break finished, return to work (but don't auto-start)
         setSessionType(SessionType.WORK);
         setTimerState("stopped"); 
@@ -582,6 +766,9 @@ React.useEffect(() => {
   function start() {
     hasStartedRef.current = true;
     setTimerState("running");
+    
+    // Initialize audio on first user interaction
+    initializeAudio();
     
     // Clear existing timer
     if (timerRef.current) {
