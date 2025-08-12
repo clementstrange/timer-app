@@ -1,3 +1,44 @@
+# Development Journal - 11 August 2025
+
+✅ **Major Enter Key Functionality Fix**
+
+Fixed critical Enter key bug where task submission wasn't working properly
+- Resolved event bubbling conflicts between input field and global keyboard handlers  
+- Enter key in task field now properly submits custom task names and starts timer
+- Enter key when timer stopped no longer conflicts with spacebar functionality
+- Improved keyboard shortcuts: Enter for start/finish, Spacebar only for pause/resume when active
+- Added contextual keyboard hints that change based on timer state (desktop only)
+- Enhanced submit() function to preserve custom task names instead of defaulting to "Work Session"
+
+✅ **Mobile UX Improvement**
+
+Hide keyboard shortcuts hints on mobile devices (screen width < 768px)
+- Saves valuable screen space on mobile where keyboard shortcuts aren't relevant
+- Desktop users still see helpful navigation hints
+- Improves mobile-first experience
+
+✅ **Stats Dashboard Implementation** 
+
+Built comprehensive statistics dashboard with toggle functionality
+- Added Stats/Recent Tasks toggle buttons with clean rounded design
+- Implemented Today and All Time statistics views with tab navigation
+- Shows total sessions time in MM:SS format
+- Displays time per task with smart grouping (ignores spaces and capitalization)
+- Task names like "My Task" and "mytask" are grouped together for better insights
+- Sorted by most time spent per task group
+- Clean UI design without redundant titles
+- Maintains responsive design for both mobile and desktop
+
+🎯 **Technical Achievements**
+
+Resolved complex React state management and event handling issues
+- Fixed useEffect dependency conflicts that were preventing timer intervals from starting
+- Implemented proper event prevention and propagation control
+- Added inline keyboard handler implementations to avoid closure issues
+- Enhanced mobile detection and responsive behavior
+
+**All changes committed and ready for production deployment! 🚀**
+
 # Development Journal - 9 August 2025
 
 [x] Active default task from last time remains. Check this one!
@@ -9,6 +50,7 @@
 [] Integrate sou`nd notification
 [] Install paywall
 [x] Enter button does not work when submitting task 
+[x] Create a dashboard
 
 
 # Development Journal - 8 August 2025

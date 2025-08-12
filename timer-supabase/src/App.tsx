@@ -102,7 +102,8 @@ const taskItemStyle = {
   padding: "12px",
   backgroundColor: "#f8f9fa",
   borderRadius: "8px",
-  border: "1px solid #e9ecef"
+  border: "1px solid #e9ecef",
+  marginBottom: "13px"
 };
 
 const taskItemContentStyle = {
@@ -143,7 +144,8 @@ const compactRowStyle = {
   gap: "10px",
   alignItems: "center",
   justifyContent: "center",
-  width: "100%"
+  width: "100%",
+  marginTop: "11px"
 };
 
 const taskInputStyle = {
@@ -205,7 +207,7 @@ const sessionHeaderStyle = {
   fontWeight: "bold",
   textAlign: "center" as const,
   color: "#333",
-  margin: "10px 0"
+  margin: "9px 0"
 };
 
 const activeTaskStyle = {
@@ -911,7 +913,7 @@ async function migrateLocalStorageToSupabase(currentUser: User): Promise<boolean
   
   const sessionHeader = (
     <div style={{...sessionHeaderStyle, color: getSessionColor()}}>
-      {sessionType === SessionType.WORK ? "🍅 WORK SESSION" : 
+      {sessionType === SessionType.WORK ? "WORK SESSION" : 
        sessionType === SessionType.BREAK ? "☕ BREAK TIME" : 
        "🏖️ LONG BREAK"}
     </div>
@@ -919,7 +921,18 @@ async function migrateLocalStorageToSupabase(currentUser: User): Promise<boolean
 
   const pomodoroCounter = (
     <div style={sessionHeaderStyle}>
-      Pomodoros: {completedPomos}/4
+      {[...Array(4)].map((_, index) => (
+        <span 
+          key={index} 
+          style={{ 
+            opacity: index < completedPomos ? 1 : 0.3,
+            fontSize: '1.05em',
+            marginRight: '4px'
+          }}
+        >
+          🍅
+        </span>
+      ))}
     </div>
   );
 
@@ -1146,7 +1159,7 @@ const buttonGroup = (
     
     const taskTimeList = Object.values(taskGroups).sort((a, b) => b.time - a.time);
     
-    return { totalTime, taskTimeList };
+    return { totalTime, taskTimeList, totalPomodoros: completedPomos };
   };
 
   const taskList = (
@@ -1220,13 +1233,28 @@ const buttonGroup = (
             
             return (
               <div>
-                {/* Total sessions time */}
-                <div style={{marginBottom: "20px", textAlign: "center"}}>
-                  <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
-                    Total Sessions Time
+                {/* Total sessions time and pomodoros */}
+                <div style={{
+                  display: "flex", 
+                  justifyContent: "space-around", 
+                  alignItems: "center", 
+                  marginBottom: "20px"
+                }}>
+                  <div style={{textAlign: "center"}}>
+                    <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
+                      Total Sessions Time
+                    </div>
+                    <div style={{fontSize: "24px", color: "#007bff", fontWeight: "bold"}}>
+                      {formatTime(stats.totalTime)}
+                    </div>
                   </div>
-                  <div style={{fontSize: "24px", color: "#007bff", fontWeight: "bold"}}>
-                    {formatTime(stats.totalTime)}
+                  <div style={{textAlign: "center"}}>
+                    <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
+                      Sessions Completed
+                    </div>
+                    <div style={{fontSize: "24px", color: "#28a745", fontWeight: "bold"}}>
+                      {stats.totalPomodoros}
+                    </div>
                   </div>
                 </div>
 
