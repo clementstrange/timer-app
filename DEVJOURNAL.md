@@ -40,8 +40,9 @@ Mastered advanced Web Audio API techniques
 🔲 Restore production timer durations (25min work, 5min break, 10min long break)
 🔲 Implement export to CSV functionality  
 🔲 Add browser notifications for when tab isn't active
-🔲 Install paywall/subscription system
+🔲 Install paywall/subscription system, lock on Stats
 🔲 Consider adding sound volume controls in settings
+🔲 Add pagination to the Recent tasks
 
 # Development Journal - 11 August 2025
 
