@@ -472,6 +472,19 @@ function Timer() {
   // Stats dashboard state
   const [showStats, setShowStats] = useState(false);
   const [statsTimeframe, setStatsTimeframe] = useState<'today' | 'alltime'>('today');
+  
+  // Premium/Paywall state
+  const [isPremium, setIsPremium] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // Handle All Time stats access
+  const handleAllTimeClick = () => {
+    if (isPremium) {
+      setStatsTimeframe('alltime');
+    } else {
+      setShowPaywall(true);
+    }
+  };
 
   // Auth modal state removed - now using routing
   
@@ -481,8 +494,20 @@ function Timer() {
   // ==================== LIFECYCLE EFFECTS ====================
   
   React.useEffect(() => {
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    setUser(session?.user ?? null);
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const currentUser = session?.user ?? null;
+    setUser(currentUser);
+    
+    // Load premium status from profiles table
+    if (currentUser?.id) {
+      console.log('=== LOADING PREMIUM STATUS FROM DATABASE ===');
+      const isPremiumUser = await loadPremiumStatus(currentUser.id);
+      setIsPremium(isPremiumUser);
+    } else {
+      console.log('❌ No user, setting isPremium to FALSE');
+      setIsPremium(false);
+    }
+    
     setIsAuthResolved(true);
     fetchTasks(); // Fetch after auth state is set
   });
@@ -497,6 +522,16 @@ function Timer() {
     }
     
     setUser(newUser);
+    
+    // Load premium status from profiles table
+    if (newUser?.id) {
+      console.log('=== AUTH STATE CHANGE - LOADING PREMIUM STATUS FROM DATABASE ===');
+      const isPremiumUser = await loadPremiumStatus(newUser.id);
+      setIsPremium(isPremiumUser);
+    } else {
+      console.log('❌ User logged out, setting isPremium to FALSE');
+      setIsPremium(false); // Reset when logging out
+    }
     
     if (wasLoggedOut && isNowLoggedIn && newUser && !hasMigrated) {
       // User just logged in - attempt migration (only once)
@@ -984,6 +1019,60 @@ async function signOut() {
   await supabase.auth.signOut();
 }
 
+// Load user's premium status from Supabase profiles table
+async function loadPremiumStatus(userId: string): Promise<boolean> {
+  try {
+    console.log('Loading premium status for user:', userId);
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('is_premium')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error('Error loading premium status:', error);
+      return false;
+    }
+    
+    const isPremiumUser = data?.is_premium || false;
+    console.log('Premium status loaded:', isPremiumUser);
+    return isPremiumUser;
+  } catch (error) {
+    console.error('Error loading premium status:', error);
+    return false;
+  }
+}
+
+// Update user's premium status in Supabase profiles table
+async function updatePremiumStatus(userId: string): Promise<boolean> {
+  try {
+    console.log('Attempting to update premium status for user:', userId);
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert({ 
+        id: userId, 
+        is_premium: true,
+        premium_since: new Date().toISOString()
+      })
+      .select();
+    
+    console.log('Update response:', { data, error });
+    
+    if (error) {
+      console.error('Error updating premium status:', error);
+      return false;
+    }
+    
+    console.log('Premium status updated successfully');
+    return true;
+  } catch (error) {
+    console.error('Error updating premium status:', error);
+    return false;
+  }
+}
+
 
   // #endregion
 
@@ -1441,114 +1530,149 @@ const buttonGroup = (
         </button>
       </div>
       {showStats ? (
-        // Stats view
-        <div>
-          {/* Today/All Time toggle buttons */}
-          <div style={{display: "flex", gap: "10px", marginBottom: "20px", justifyContent: "center"}}>
-            <button 
-              style={{
-                ...buttonStyle,
-                backgroundColor: statsTimeframe === 'today' ? "#007bff" : "#f8f9fa",
-                color: statsTimeframe === 'today' ? "white" : "#666",
-                padding: "8px 16px",
-                fontSize: "14px"
-              }}
-              onClick={() => setStatsTimeframe('today')}
-            >
-              Today
-            </button>
-            <button 
-              style={{
-                ...buttonStyle,
-                backgroundColor: statsTimeframe === 'alltime' ? "#007bff" : "#f8f9fa", 
-                color: statsTimeframe === 'alltime' ? "white" : "#666",
-                padding: "8px 16px",
-                fontSize: "14px"
-              }}
-              onClick={() => setStatsTimeframe('alltime')}
-            >
-              All Time
-            </button>
+        // Stats view - require login
+        !user ? (
+          <div style={{
+            textAlign: "center" as const,
+            padding: "40px 20px",
+            color: "#666"
+          }}>
+            <div style={{fontSize: "48px", marginBottom: "20px"}}>📊</div>
+            <h3 style={{
+              fontSize: "20px",
+              fontWeight: "bold",
+              marginBottom: "12px",
+              color: "#333"
+            }}>
+              Please Log In to View Stats
+            </h3>
+            <p style={{
+              fontSize: "16px",
+              marginBottom: "24px",
+              lineHeight: "1.5"
+            }}>
+              Create an account to track your productivity statistics and see detailed insights about your work sessions.
+            </p>
+            <Link to="/login" style={{textDecoration: 'none'}}>
+              <button style={{
+                ...primaryButtonStyle,
+                padding: "12px 24px",
+                fontSize: "16px"
+              }}>
+                Log In / Sign Up
+              </button>
+            </Link>
           </div>
+        ) : (
+          <div>
+            {/* Today/All Time toggle buttons */}
+            <div style={{display: "flex", gap: "10px", marginBottom: "20px", justifyContent: "center"}}>
+              <button 
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: statsTimeframe === 'today' ? "#007bff" : "#f8f9fa",
+                  color: statsTimeframe === 'today' ? "white" : "#666",
+                  padding: "8px 16px",
+                  fontSize: "14px"
+                }}
+                onClick={() => setStatsTimeframe('today')}
+              >
+                Today
+              </button>
+              <button 
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: statsTimeframe === 'alltime' ? "#007bff" : "#f8f9fa", 
+                  color: statsTimeframe === 'alltime' ? "white" : "#666",
+                  padding: "8px 16px",
+                  fontSize: "14px",
+                  position: "relative"
+                }}
+                onClick={handleAllTimeClick}
+              >
+                All Time {!isPremium && '🔒'}
+              </button>
+            </div>
 
-          {/* Export button */}
-          <div style={{display: "flex", justifyContent: "center", marginBottom: "20px"}}>
-            <button 
-              style={{
-                ...buttonStyle,
-                backgroundColor: "#28a745",
-                color: "white",
-                padding: "8px 16px",
-                fontSize: "14px"
-              }}
-              onClick={exportToCSV}
-            >
-              📊 Export CSV
-            </button>
-          </div>
+            {/* Export button */}
+            <div style={{display: "flex", justifyContent: "center", marginBottom: "20px"}}>
+              <button 
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: "#28a745",
+                  color: "white",
+                  padding: "8px 16px",
+                  fontSize: "14px"
+                }}
+                onClick={exportToCSV}
+              >
+                📊 Export CSV
+              </button>
+            </div>
 
-          {/* Stats content */}
-          {(() => {
-            const stats = statsTimeframe === 'today' ? getTodayStats() : getAllTimeStats();
-            
-            return (
-              <div>
-                {/* Total sessions time and pomodoros */}
-                <div style={{
-                  display: "flex", 
-                  justifyContent: "space-around", 
-                  alignItems: "center", 
-                  marginBottom: "20px"
-                }}>
-                  <div style={{textAlign: "center"}}>
-                    <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
-                      Total Sessions Time
-                    </div>
-                    <div style={{fontSize: "24px", color: "#007bff", fontWeight: "bold"}}>
-                      {formatTime(stats.totalTime)}
-                    </div>
-                  </div>
-                  <div style={{textAlign: "center"}}>
-                    <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
-                      Sessions Completed
-                    </div>
-                    <div style={{fontSize: "24px", color: "#28a745", fontWeight: "bold"}}>
-                      {stats.totalPomodoros}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Time per task */}
+            {/* Stats content */}
+            {(() => {
+              const stats = statsTimeframe === 'today' ? getTodayStats() : getAllTimeStats();
+              
+              return (
                 <div>
-                  {stats.taskTimeList.length > 0 ? (
-                    stats.taskTimeList.map((taskGroup, index) => (
-                      <div key={index} style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "8px 12px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "6px",
-                        marginBottom: "8px"
-                      }}>
-                        <div style={{fontWeight: "500", color: "#333"}}>
-                          {taskGroup.name}
-                        </div>
-                        <div style={{color: "#007bff", fontWeight: "bold"}}>
-                          {formatTime(taskGroup.time)}
-                        </div>
+                  {/* Total sessions time and pomodoros */}
+                  <div style={{
+                    display: "flex", 
+                    justifyContent: "space-around", 
+                    alignItems: "center", 
+                    marginBottom: "20px"
+                  }}>
+                    <div style={{textAlign: "center"}}>
+                      <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
+                        Total Sessions Time
                       </div>
-                    ))
-                  ) : (
-                    <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
-                      No tasks {statsTimeframe === 'today' ? 'today' : 'yet'}.
+                      <div style={{fontSize: "24px", color: "#007bff", fontWeight: "bold"}}>
+                        {formatTime(stats.totalTime)}
+                      </div>
                     </div>
-                  )}
+                    <div style={{textAlign: "center"}}>
+                      <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
+                        Sessions Completed
+                      </div>
+                      <div style={{fontSize: "24px", color: "#28a745", fontWeight: "bold"}}>
+                        {stats.totalPomodoros}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time per task */}
+                  <div>
+                    {stats.taskTimeList.length > 0 ? (
+                      stats.taskTimeList.map((taskGroup, index) => (
+                        <div key={index} style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "8px 12px",
+                          backgroundColor: "#f8f9fa",
+                          borderRadius: "6px",
+                          marginBottom: "8px"
+                        }}>
+                          <div style={{fontWeight: "500", color: "#333"}}>
+                            {taskGroup.name}
+                          </div>
+                          <div style={{color: "#007bff", fontWeight: "bold"}}>
+                            {formatTime(taskGroup.time)}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
+                        No tasks {statsTimeframe === 'today' ? 'today' : 'yet'}.
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })()}
-        </div>
+              );
+            })()}
+          </div>
+        )
       ) : (
         // Tasks view
         <div>
@@ -1620,6 +1744,123 @@ const buttonGroup = (
           )}
         </div>
       )}
+    </div>
+  );
+
+  // ==================== PAYWALL MODAL ====================
+  
+  const paywallModal = showPaywall && (
+    <div style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1000,
+      padding: "20px"
+    }}>
+      <div style={{
+        backgroundColor: "white",
+        borderRadius: "16px",
+        padding: "40px",
+        maxWidth: "400px",
+        width: "100%",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+        textAlign: "center" as const
+      }}>
+        <div style={{fontSize: "48px", marginBottom: "20px"}}>🔒</div>
+        
+        <h2 style={{
+          fontSize: "24px",
+          fontWeight: "bold",
+          marginBottom: "16px",
+          color: "#333"
+        }}>
+          Premium Feature
+        </h2>
+        
+        <p style={{
+          fontSize: "16px",
+          color: "#666",
+          marginBottom: "24px",
+          lineHeight: "1.5"
+        }}>
+          Access to All Time statistics is available with Premium. 
+          Upgrade to see your complete productivity history and unlock advanced insights.
+        </p>
+        
+        <div style={{
+          fontSize: "32px",
+          fontWeight: "bold",
+          color: "#007bff",
+          marginBottom: "8px"
+        }}>
+          $1 Lifetime
+        </div>
+        
+        <div style={{
+          fontSize: "14px",
+          color: "#999",
+          marginBottom: "24px"
+        }}>
+          One-time payment • No subscription
+        </div>
+        
+        <div style={{
+          display: "flex",
+          gap: "12px",
+          justifyContent: "center",
+          flexWrap: "wrap" as const
+        }}>
+          <button 
+            style={{
+              ...primaryButtonStyle,
+              padding: "12px 24px",
+              fontSize: "16px"
+            }}
+            onClick={async () => {
+              if (user) {
+                // Update premium status in Supabase
+                const success = await updatePremiumStatus(user.id);
+                if (success) {
+                  setIsPremium(true);
+                  setShowPaywall(false);
+                  setStatsTimeframe('alltime');
+                } else {
+                  alert('Failed to upgrade. Please try again.');
+                }
+              } else {
+                alert('Please log in first.');
+              }
+            }}
+          >
+            Upgrade to Premium
+          </button>
+          
+          <button 
+            style={{
+              ...secondaryButtonStyle,
+              padding: "12px 24px",
+              fontSize: "16px"
+            }}
+            onClick={() => setShowPaywall(false)}
+          >
+            Maybe Later
+          </button>
+        </div>
+        
+        <div style={{
+          marginTop: "20px",
+          fontSize: "14px",
+          color: "#999"
+        }}>
+          Premium includes unlimited history and export features.
+        </div>
+      </div>
     </div>
   );
 
@@ -1747,6 +1988,7 @@ if (isMobile) {
     <div style={containerStyle}>
       {timerSection}
       {taskList}
+      {paywallModal}
     </div>
   );
 }
@@ -1758,6 +2000,7 @@ return (
       {timerSection}
       {taskList}
     </div>
+    {paywallModal}
   </div>
 );
 }
