@@ -1312,6 +1312,14 @@ const buttonGroup = (
 );
 
   // Stats calculation functions
+  const getTodayTasks = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return completedTasks.filter(task => {
+      const taskDate = new Date(task.created_at).toISOString().split('T')[0];
+      return taskDate === today;
+    });
+  };
+
   const getTodayStats = () => {
     const today = new Date().toISOString().split('T')[0];
     const todayTasks = completedTasks.filter(task => {
@@ -1325,6 +1333,55 @@ const buttonGroup = (
   const getAllTimeStats = () => {
     return calculateStats(completedTasks);
   };
+
+  // CSV Export functionality
+  function exportToCSV() {
+    const tasksToExport = statsTimeframe === 'today' ? getTodayTasks() : completedTasks;
+    
+    if (tasksToExport.length === 0) {
+      alert('No tasks to export!');
+      return;
+    }
+
+    // CSV headers with quotes for Excel compatibility
+    const headers = ['"Task Name"', '"Time Worked (seconds)"', '"Time Worked (minutes)"', '"Session Date"', '"Session Start Time"', '"Session End Time"'];
+    
+    // Convert tasks to CSV rows
+    const csvRows = tasksToExport.map(task => {
+      const startTime = new Date(task.created_at);
+      const endTime = new Date(startTime.getTime() + (task.time_worked * 1000));
+      
+      return [
+        `"${task.task_name.replace(/"/g, '""')}"`, // Escape quotes for CSV
+        task.time_worked, // seconds
+        Math.round(task.time_worked / 60 * 100) / 100, // minutes with 2 decimal places
+        `"${startTime.toLocaleDateString()}"`, // session date
+        `"${startTime.toLocaleTimeString()}"`, // session start time only
+        `"${endTime.toLocaleTimeString()}"` // session end time only
+      ];
+    });
+    
+    // Combine headers and rows
+    const csvContent = [headers, ...csvRows]
+      .map(row => row.join(','))
+      .join('\r\n'); // Use Windows line endings for better Excel compatibility
+    
+    // Add BOM for Excel UTF-8 recognition
+    const csvWithBOM = '\uFEFF' + csvContent;
+    
+    // Create and download file
+    const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    
+    const filename = `lifeinfocusexport-${statsTimeframe}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   const calculateStats = (tasks: Task[]) => {
     const totalTime = tasks.reduce((sum, task) => sum + task.time_worked, 0);
@@ -1411,6 +1468,22 @@ const buttonGroup = (
               onClick={() => setStatsTimeframe('alltime')}
             >
               All Time
+            </button>
+          </div>
+
+          {/* Export button */}
+          <div style={{display: "flex", justifyContent: "center", marginBottom: "20px"}}>
+            <button 
+              style={{
+                ...buttonStyle,
+                backgroundColor: "#28a745",
+                color: "white",
+                padding: "8px 16px",
+                fontSize: "14px"
+              }}
+              onClick={exportToCSV}
+            >
+              📊 Export CSV
             </button>
           </div>
 
