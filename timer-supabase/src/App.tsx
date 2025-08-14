@@ -3,6 +3,8 @@ import { useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from './supabase';
 import Login from './Login';
+import { ThemeProvider, useTheme } from './ThemeContext';
+import { ThemeToggle } from './ThemeToggle';
 
 // Type declaration for webkit audio context
 declare global {
@@ -47,71 +49,71 @@ export interface User {
 // #endregion
 
 // #region Component Styles
-const containerStyle = { 
+const getContainerStyle = (colors: any) => ({ 
   display: "flex", 
   flexDirection: "column" as const, 
   minHeight: "100vh",
   padding: "10px",
   gap: "20px",
-  backgroundColor: "#f5f5f5"
-};
+  backgroundColor: colors.background
+});
 
-const webContainerStyle = {
+const getWebContainerStyle = (colors: any) => ({
   display: "flex",
   flexDirection: "column" as const,
   minHeight: "100vh",
-  backgroundColor: "#e9ecef",
+  backgroundColor: colors.background,
   padding: "20px",
   alignItems: "center",
   justifyContent: "center"
-};
+});
 
-const webFrameStyle = {
+const getWebFrameStyle = (colors: any) => ({
   display: "flex",
   flexDirection: "column" as const,
   maxWidth: "600px",
   width: "100%",
   gap: "20px",
-  backgroundColor: "#f5f5f5",
+  backgroundColor: colors.surface,
   padding: "20px",
   borderRadius: "16px",
-  boxShadow: "0 4px 20px rgba(0,0,0,0.15)"
-};
+  boxShadow: `0 4px 20px ${colors.shadow}`
+});
 
-const rightColumnStyle = { 
+const getRightColumnStyle = (colors: any) => ({ 
   display: "flex", 
   flexDirection: "column" as const, 
   alignItems: "center",
-  backgroundColor: "white",
+  backgroundColor: colors.surface,
   borderRadius: "12px",
   padding: "20px",
-  boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+  boxShadow: `0 2px 10px ${colors.shadow}`,
   minHeight: "200px"  // Let content determine height
-};
+});
 
-const taskListStyle = { 
+const getTaskListStyle = (colors: any) => ({ 
   display: "flex", 
   flexDirection: "column" as const, 
   alignItems: "stretch", 
   gap: "12px", 
   maxHeight: "400px",
   overflowY: "auto" as const,
-  backgroundColor: "white",
+  backgroundColor: colors.surface,
   borderRadius: "12px",
   padding: "20px",
-  boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
-};
+  boxShadow: `0 2px 10px ${colors.shadow}`
+});
 
-const taskItemStyle = { 
+const getTaskItemStyle = (colors: any) => ({ 
   display: "flex", 
   flexDirection: "column" as const,
   gap: "8px",
   padding: "12px",
-  backgroundColor: "#f8f9fa",
+  backgroundColor: colors.background,
   borderRadius: "8px",
-  border: "1px solid #e9ecef",
+  border: `1px solid ${colors.border}`,
   marginBottom: "13px"
-};
+});
 
 const taskItemContentStyle = {
   display: "flex",
@@ -135,16 +137,19 @@ const buttonGroupStyle = {
   marginTop: "10px"
 };
 
-const inputStyle = {
+const getInputStyle = (colors: any) => ({
   width: "auto", // Changed from "100%"
   flex: 1,       // Added this to fill available space
   padding: "12px",
   fontSize: "16px",
   borderRadius: "8px",
-  border: "2px solid #ddd",
+  border: `2px solid ${colors.border}`,
+  backgroundColor: colors.surface,
+  color: colors.text + ' !important',
   outline: "none",
-  transition: "border-color 0.2s"
-};
+  transition: "border-color 0.2s",
+  WebkitTextFillColor: colors.text // For Safari autofill override
+});
 
 const compactRowStyle = {
   display: "flex",
@@ -155,16 +160,19 @@ const compactRowStyle = {
   marginTop: "11px"
 };
 
-const taskInputStyle = {
+const getTaskInputStyle = (colors: any) => ({
   width: "200px",
   padding: "12px",
   fontSize: "16px",
   borderRadius: "8px",
-  border: "2px solid #ddd",
+  border: `2px solid ${colors.border}`,
+  backgroundColor: colors.surface,
+  color: colors.text + ' !important',
   outline: "none",
   transition: "border-color 0.2s",
   textAlign: "left" as const, // Changed from center to left
-};
+  WebkitTextFillColor: colors.text // For Safari autofill override
+});
 
 const buttonStyle = {
   padding: "12px 20px",
@@ -177,53 +185,53 @@ const buttonStyle = {
   minWidth: "80px"
 };
 
-const primaryButtonStyle = {
+const getPrimaryButtonStyle = (colors: any) => ({
   ...buttonStyle,
-  backgroundColor: "#007bff",
+  backgroundColor: colors.primary,
   color: "white"
-};
+});
 
-const secondaryButtonStyle = {
+const getSecondaryButtonStyle = (colors: any) => ({
   ...buttonStyle,
-  backgroundColor: "#6c757d",
+  backgroundColor: colors.secondary,
   color: "white"
-};
+});
 
-const dangerButtonStyle = {
+const getDangerButtonStyle = (colors: any) => ({
   ...buttonStyle,
-  backgroundColor: "#dc3545",
+  backgroundColor: colors.danger,
   color: "white"
-};
+});
 
-const successButtonStyle = {
+const getSuccessButtonStyle = (colors: any) => ({
   ...buttonStyle,
-  backgroundColor: "#28a745",
+  backgroundColor: colors.success,
   color: "white"
-};
+});
 
-const timerDisplayStyle = {
+const getTimerDisplayStyle = (colors: any) => ({
   fontSize: "clamp(2rem, 8vw, 4rem)",
   fontWeight: "bold",
-  color: "#333",
+  color: colors.text,
   textAlign: "center" as const,
   margin: "20px 0"
-};
+});
 
-const sessionHeaderStyle = {
+const getSessionHeaderStyle = (colors: any) => ({
   fontSize: "clamp(1.2rem, 4vw, 1.8rem)",
   fontWeight: "bold",
   textAlign: "center" as const,
-  color: "#333",
+  color: colors.text,
   margin: "9px 0"
-};
+});
 
-const activeTaskStyle = {
+const getActiveTaskStyle = (colors: any) => ({
   fontSize: "clamp(1rem, 3vw, 1.2rem)",
   textAlign: "center" as const,
-  color: "#666",
+  color: colors.textSecondary,
   margin: "10px 0",
   wordBreak: "break-word" as const
-};
+});
 
 const editFormStyle = {
   display: "flex",
@@ -238,11 +246,11 @@ const editInputRowStyle = {
   flexWrap: "wrap" as const
 };
 
-const compactInputStyle = {
-  ...inputStyle,
+const getCompactInputStyle = (colors: any) => ({
+  ...getInputStyle(colors),
   width: "80px",
   padding: "8px"
-};
+});
 
 // Login/Logout styles
 
@@ -253,6 +261,7 @@ const compactInputStyle = {
 // #endregion
 
 function Timer() {
+  const { colors } = useTheme();
   // Global audio context to maintain across calls
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   
@@ -1188,7 +1197,7 @@ async function migrateLocalStorageToSupabase(currentUser: User): Promise<boolean
   // ==================== SHARED COMPONENTS ====================
   
   const sessionHeader = (
-    <div style={{...sessionHeaderStyle, color: getSessionColor()}}>
+    <div style={{...getSessionHeaderStyle(colors), color: getSessionColor()}}>
       {sessionType === SessionType.WORK ? "WORK SESSION" : 
        sessionType === SessionType.BREAK ? "☕ BREAK TIME" : 
        "🏖️ LONG BREAK"}
@@ -1196,7 +1205,7 @@ async function migrateLocalStorageToSupabase(currentUser: User): Promise<boolean
   );
 
   const pomodoroCounter = (
-    <div style={sessionHeaderStyle}>
+    <div style={getSessionHeaderStyle(colors)}>
       {[...Array(4)].map((_, index) => (
         <span 
           key={index} 
@@ -1213,7 +1222,7 @@ async function migrateLocalStorageToSupabase(currentUser: User): Promise<boolean
   );
 
   const activeTaskDisplay = timerState !== "stopped" && (
-  <div style={activeTaskStyle}>
+  <div style={getActiveTaskStyle(colors)}>
     <strong>Active Task:</strong><br />
     {task || "Work Session"}
   </div>
@@ -1240,7 +1249,7 @@ const taskInput = timerState === "stopped" && (
     />
     
     <input 
-      style={taskInputStyle}
+      style={getTaskInputStyle(colors)}
       placeholder="Enter new task"
       value={inputValue} 
       onChange={(e) => {
@@ -1342,7 +1351,7 @@ const taskInput = timerState === "stopped" && (
 
 
 const timerDisplay = (
-    <div style={{...timerDisplayStyle, color: getSessionColor()}}>
+    <div style={{...getTimerDisplayStyle(colors), color: getSessionColor()}}>
       {formatTime(count)}
     </div>
   );
@@ -1351,7 +1360,7 @@ const buttonGroup = (
     {/* Login link on the left (only when not logged in) */}
     {!user && (
       <Link to="/login" style={{textDecoration: 'none'}}>
-        <button style={secondaryButtonStyle}>
+        <button style={getSecondaryButtonStyle(colors)}>
           Log in
         </button>
       </Link>
@@ -1359,7 +1368,7 @@ const buttonGroup = (
 
     {/* Start/Pause/Resume button */}
     <button 
-      style={primaryButtonStyle}
+      style={getPrimaryButtonStyle(colors)}
       onClick={handleStartPauseResume}
     >
       {timerState === "stopped" ? "Start" :
@@ -1370,7 +1379,7 @@ const buttonGroup = (
     {/* Other buttons */}
     {sessionType === SessionType.WORK && (timerState === "running" || timerState === "paused") ? (
       <button 
-        style={secondaryButtonStyle}
+        style={getSecondaryButtonStyle(colors)}
         onClick={reset}
       >
         Finish
@@ -1378,19 +1387,19 @@ const buttonGroup = (
     ) : sessionType !== "work" && (
       <>
         <button 
-          style={successButtonStyle}
+          style={getSuccessButtonStyle(colors)}
           onClick={() => setCount(prev => prev + 60)}
         >
           +1 min
         </button> 
         <button 
-          style={dangerButtonStyle}
+          style={getDangerButtonStyle(colors)}
           onClick={() => setCount(prev => Math.max(0, prev - 60))}
         >
           -1 min
         </button>
         <button 
-          style={secondaryButtonStyle}
+          style={getSecondaryButtonStyle(colors)}
           onClick={handleSkip}
         >
           Skip
@@ -1496,7 +1505,7 @@ const buttonGroup = (
   };
 
   const taskList = (
-    <div style={taskListStyle}>
+    <div style={getTaskListStyle(colors)}>
       <div style={{display: "flex", gap: "10px", marginBottom: "15px"}}>
         <button 
           style={{
@@ -1542,7 +1551,7 @@ const buttonGroup = (
               fontSize: "20px",
               fontWeight: "bold",
               marginBottom: "12px",
-              color: "#333"
+              color: colors.text
             }}>
               Please Log In to View Stats
             </h3>
@@ -1555,7 +1564,7 @@ const buttonGroup = (
             </p>
             <Link to="/login" style={{textDecoration: 'none'}}>
               <button style={{
-                ...primaryButtonStyle,
+                ...getPrimaryButtonStyle(colors),
                 padding: "12px 24px",
                 fontSize: "16px"
               }}>
@@ -1599,7 +1608,7 @@ const buttonGroup = (
               <button 
                 style={{
                   ...buttonStyle,
-                  backgroundColor: "#28a745",
+                  backgroundColor: colors.success,
                   color: "white",
                   padding: "8px 16px",
                   fontSize: "14px"
@@ -1624,18 +1633,18 @@ const buttonGroup = (
                     marginBottom: "20px"
                   }}>
                     <div style={{textAlign: "center"}}>
-                      <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
+                      <div style={{fontSize: "16px", fontWeight: "bold", color: colors.text, marginBottom: "5px"}}>
                         Total Sessions Time
                       </div>
-                      <div style={{fontSize: "24px", color: "#007bff", fontWeight: "bold"}}>
+                      <div style={{fontSize: "24px", color: colors.primary, fontWeight: "bold"}}>
                         {formatTime(stats.totalTime)}
                       </div>
                     </div>
                     <div style={{textAlign: "center"}}>
-                      <div style={{fontSize: "16px", fontWeight: "bold", color: "#333", marginBottom: "5px"}}>
+                      <div style={{fontSize: "16px", fontWeight: "bold", color: colors.text, marginBottom: "5px"}}>
                         Sessions Completed
                       </div>
-                      <div style={{fontSize: "24px", color: "#28a745", fontWeight: "bold"}}>
+                      <div style={{fontSize: "24px", color: colors.success, fontWeight: "bold"}}>
                         {stats.totalPomodoros}
                       </div>
                     </div>
@@ -1650,20 +1659,20 @@ const buttonGroup = (
                           justifyContent: "space-between",
                           alignItems: "center",
                           padding: "8px 12px",
-                          backgroundColor: "#f8f9fa",
+                          backgroundColor: colors.background,
                           borderRadius: "6px",
                           marginBottom: "8px"
                         }}>
-                          <div style={{fontWeight: "500", color: "#333"}}>
+                          <div style={{fontWeight: "500", color: colors.text}}>
                             {taskGroup.name}
                           </div>
-                          <div style={{color: "#007bff", fontWeight: "bold"}}>
+                          <div style={{color: colors.primary, fontWeight: "bold"}}>
                             {formatTime(taskGroup.time)}
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
+                      <div style={{textAlign: "center", color: colors.textSecondary, padding: "20px"}}>
                         No tasks {statsTimeframe === 'today' ? 'today' : 'yet'}.
                       </div>
                     )}
@@ -1678,31 +1687,31 @@ const buttonGroup = (
         <div>
           {completedTasks.length > 0 ? (
             completedTasks.map((task) => (
-            <div key={task.id} style={taskItemStyle}>
+            <div key={task.id} style={getTaskItemStyle(colors)}>
                 {editingTaskId === task.id ? (
                   <div style={editFormStyle}>
                     <input
-                      style={inputStyle}
+                      style={getInputStyle(colors)}
                       placeholder="Task name"
                       value={editTaskName}
                       onChange={(e) => setEditTaskName(e.target.value)}
                     />
                     <div style={editInputRowStyle}>
                       <input
-                        style={compactInputStyle}
+                        style={getCompactInputStyle(colors)}
                         type="number"
                         placeholder="Seconds"
                         value={editTimeWorked}
                         onChange={(e) => setEditTimeWorked(Number(e.target.value))}
                       />
                       <button 
-                        style={successButtonStyle}
+                        style={getSuccessButtonStyle(colors)}
                         onClick={() => saveTask(task.id)}
                       >
                         Save
                       </button>
                       <button 
-                        style={secondaryButtonStyle}
+                        style={getSecondaryButtonStyle(colors)}
                         onClick={() => setEditingTaskId(null)}
                       >
                         Cancel
@@ -1712,22 +1721,22 @@ const buttonGroup = (
                 ) : (
                   <div style={taskItemContentStyle}>
                     <div style={{flex: 1, minWidth: "120px"}}>
-                      <div style={{fontWeight: "bold", marginBottom: "4px"}}>
+                      <div style={{fontWeight: "bold", marginBottom: "4px", color: colors.text}}>
                         {task.task_name}
                       </div>
-                      <div style={{color: "#666", fontSize: "14px"}}>
+                      <div style={{color: colors.textSecondary, fontSize: "14px"}}>
                         {formatTime(task.time_worked)}
                       </div>
                     </div>
                     <div style={taskButtonsStyle}>
                       <button 
-                        style={secondaryButtonStyle}
+                        style={getSecondaryButtonStyle(colors)}
                         onClick={() => editTask(task.id)}
                       >
                         Edit
                       </button>
                       <button 
-                        style={dangerButtonStyle}
+                        style={getDangerButtonStyle(colors)}
                         onClick={() => deleteTask(task.id)}
                       >
                         Delete
@@ -1738,7 +1747,7 @@ const buttonGroup = (
               </div>
             ))
           ) : (
-            <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
+            <div style={{textAlign: "center", color: colors.textSecondary, padding: "20px"}}>
               No tasks yet.
             </div>
           )}
@@ -1764,12 +1773,12 @@ const buttonGroup = (
       padding: "20px"
     }}>
       <div style={{
-        backgroundColor: "white",
+        backgroundColor: colors.surface,
         borderRadius: "16px",
         padding: "40px",
         maxWidth: "400px",
         width: "100%",
-        boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+        boxShadow: `0 20px 40px ${colors.shadow}`,
         textAlign: "center" as const
       }}>
         <div style={{fontSize: "48px", marginBottom: "20px"}}>🔒</div>
@@ -1778,14 +1787,14 @@ const buttonGroup = (
           fontSize: "24px",
           fontWeight: "bold",
           marginBottom: "16px",
-          color: "#333"
+          color: colors.text
         }}>
           Premium Feature
         </h2>
         
         <p style={{
           fontSize: "16px",
-          color: "#666",
+          color: colors.textSecondary,
           marginBottom: "24px",
           lineHeight: "1.5"
         }}>
@@ -1796,7 +1805,7 @@ const buttonGroup = (
         <div style={{
           fontSize: "32px",
           fontWeight: "bold",
-          color: "#007bff",
+          color: colors.primary,
           marginBottom: "8px"
         }}>
           $1 Lifetime
@@ -1804,7 +1813,7 @@ const buttonGroup = (
         
         <div style={{
           fontSize: "14px",
-          color: "#999",
+          color: colors.textSecondary,
           marginBottom: "24px"
         }}>
           One-time payment • No subscription
@@ -1818,7 +1827,7 @@ const buttonGroup = (
         }}>
           <button 
             style={{
-              ...primaryButtonStyle,
+              ...getPrimaryButtonStyle(colors),
               padding: "12px 24px",
               fontSize: "16px"
             }}
@@ -1843,7 +1852,7 @@ const buttonGroup = (
           
           <button 
             style={{
-              ...secondaryButtonStyle,
+              ...getSecondaryButtonStyle(colors),
               padding: "12px 24px",
               fontSize: "16px"
             }}
@@ -1856,7 +1865,7 @@ const buttonGroup = (
         <div style={{
           marginTop: "20px",
           fontSize: "14px",
-          color: "#999"
+          color: colors.textSecondary
         }}>
           Premium includes unlimited history and export features.
         </div>
@@ -1868,13 +1877,13 @@ const buttonGroup = (
 
 // Auth section removed - now using routing
 const timerSection = (
-  <div style={rightColumnStyle}>
+  <div style={getRightColumnStyle(colors)}>
     {/* Welcome message and logout link above session header (only when logged in) */}
     {user && (
       <div style={{
         fontSize: "16px",
         textAlign: "center" as const,
-        color: "#666",
+        color: colors.textSecondary,
         margin: "5px 0",
         display: "flex",
         justifyContent: "center",
@@ -1883,11 +1892,11 @@ const timerSection = (
         flexWrap: "wrap" as const
       }}>
         <span>
-          👋 Welcome back, <span style={{fontWeight: "bold", color: "#333"}}>{user.user_metadata?.name || user.email?.split('@')[0] || 'User'}</span>!
+          👋 Welcome back, <span style={{fontWeight: "bold", color: colors.text}}>{user.user_metadata?.name || user.email?.split('@')[0] || 'User'}</span>!
         </span>
         <span 
           style={{
-            color: "#007bff",
+            color: colors.primary,
             cursor: "pointer",
             textDecoration: "underline",
             fontSize: "14px"
@@ -1910,7 +1919,7 @@ const timerSection = (
     {!isMobile && (
       <div style={{
         fontSize: "12px",
-        color: "#999",
+        color: colors.textSecondary,
         textAlign: "center" as const,
         margin: "5px 0 20px 0",
         opacity: 0.7
@@ -1918,35 +1927,38 @@ const timerSection = (
         {timerState === "stopped" ? (
           <div>
             Press <kbd style={{
-              backgroundColor: "#f5f5f5",
-              border: "1px solid #ccc",
+              backgroundColor: colors.background,
+              border: `1px solid ${colors.border}`,
               borderRadius: "3px",
               padding: "2px 6px",
               fontSize: "11px",
-              fontFamily: "monospace"
+              fontFamily: "monospace",
+              color: colors.text
             }}>Enter</kbd> to Start
           </div>
         ) : timerState === "running" ? (
           <div style={{display: "flex", flexDirection: "column" as const, gap: "8px"}}>
             <div>
               Press <kbd style={{
-                backgroundColor: "#f5f5f5",
-                border: "1px solid #ccc",
+                backgroundColor: colors.background,
+                border: `1px solid ${colors.border}`,
                 borderRadius: "3px",
                 padding: "2px 6px",
                 fontSize: "11px",
-                fontFamily: "monospace"
+                fontFamily: "monospace",
+                color: colors.text
               }}>Space</kbd> to Pause
             </div>
             {sessionType === SessionType.WORK && (
               <div>
                 Press <kbd style={{
-                  backgroundColor: "#f5f5f5",
-                  border: "1px solid #ccc",
+                  backgroundColor: colors.background,
+                  border: `1px solid ${colors.border}`,
                   borderRadius: "3px",
                   padding: "2px 6px",
                   fontSize: "11px",
-                  fontFamily: "monospace"
+                  fontFamily: "monospace",
+                  color: colors.text
                 }}>Enter</kbd> to Finish
               </div>
             )}
@@ -1955,23 +1967,25 @@ const timerSection = (
           <div style={{display: "flex", flexDirection: "column" as const, gap: "8px"}}>
             <div>
               Press <kbd style={{
-                backgroundColor: "#f5f5f5",
-                border: "1px solid #ccc",
+                backgroundColor: colors.background,
+                border: `1px solid ${colors.border}`,
                 borderRadius: "3px",
                 padding: "2px 6px",
                 fontSize: "11px",
-                fontFamily: "monospace"
+                fontFamily: "monospace",
+                color: colors.text
               }}>Space</kbd> to Resume
             </div>
             {sessionType === SessionType.WORK && (
               <div>
                 Press <kbd style={{
-                  backgroundColor: "#f5f5f5",
-                  border: "1px solid #ccc",
+                  backgroundColor: colors.background,
+                  border: `1px solid ${colors.border}`,
                   borderRadius: "3px",
                   padding: "2px 6px",
                   fontSize: "11px",
-                  fontFamily: "monospace"
+                  fontFamily: "monospace",
+                  color: colors.text
                 }}>Enter</kbd> to Finish
               </div>
             )}
@@ -1985,7 +1999,11 @@ const timerSection = (
 );
 if (isMobile) {
   return (
-    <div style={containerStyle}>
+    <div style={getContainerStyle(colors)}>
+      {/* Theme toggle for mobile */}
+      <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 100 }}>
+        <ThemeToggle />
+      </div>
       {timerSection}
       {taskList}
       {paywallModal}
@@ -1995,8 +2013,12 @@ if (isMobile) {
 
 // Desktop version
 return (
-  <div style={webContainerStyle}>
-    <div style={webFrameStyle}>
+  <div style={getWebContainerStyle(colors)}>
+    {/* Theme toggle for desktop */}
+    <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100 }}>
+      <ThemeToggle />
+    </div>
+    <div style={getWebFrameStyle(colors)}>
       {timerSection}
       {taskList}
     </div>
@@ -2007,12 +2029,14 @@ return (
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Timer />} />
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Timer />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

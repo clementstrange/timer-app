@@ -2,28 +2,30 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from './supabase';
 import { AuthForm } from './App';
+import { useTheme } from './ThemeContext';
+import { ThemeToggle } from './ThemeToggle';
 
 // Reuse the same styles from the modal for consistency
-const containerStyle = {
+const getContainerStyle = (colors: any) => ({
   display: "flex",
   flexDirection: "column" as const,
   minHeight: "100vh",
-  backgroundColor: "#e9ecef",
+  backgroundColor: colors.background,
   alignItems: "center",
   justifyContent: "center",
   padding: "10px" // Reduced padding for mobile
-};
+});
 
-const cardStyle = {
-  backgroundColor: "white",
+const getCardStyle = (colors: any) => ({
+  backgroundColor: colors.surface,
   padding: "20px", // Reduced from 40px for mobile
   borderRadius: "16px",
   width: "100%",
   maxWidth: "400px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+  boxShadow: `0 10px 30px ${colors.shadow}`,
   margin: "10px", // Added margin for mobile spacing
   boxSizing: "border-box" as const // Ensure padding doesn't overflow
-};
+});
 
 const formStyle = {
   display: "flex",
@@ -31,16 +33,19 @@ const formStyle = {
   gap: "20px"
 };
 
-const inputStyle = {
+const getInputStyle = (colors: any) => ({
   width: "100%",
   padding: "15px",
   fontSize: "16px",
   borderRadius: "8px",
-  border: "2px solid #ddd",
+  border: `2px solid ${colors.border}`,
+  backgroundColor: colors.surface,
+  color: colors.text + ' !important',
   outline: "none",
   transition: "border-color 0.2s",
-  boxSizing: "border-box" as const
-};
+  boxSizing: "border-box" as const,
+  WebkitTextFillColor: colors.text // For Safari autofill override
+});
 
 const buttonStyle = {
   padding: "15px 20px",
@@ -53,35 +58,36 @@ const buttonStyle = {
   minWidth: "80px"
 };
 
-const primaryButtonStyle = {
+const getPrimaryButtonStyle = (colors: any) => ({
   ...buttonStyle,
-  backgroundColor: "#007bff",
+  backgroundColor: colors.primary,
   color: "white"
-};
+});
 
-const secondaryButtonStyle = {
+const getSecondaryButtonStyle = (colors: any) => ({
   ...buttonStyle,
-  backgroundColor: "#6c757d",
+  backgroundColor: colors.secondary,
   color: "white"
-};
+});
 
-const linkStyle = {
-  color: "#007bff",
+const getLinkStyle = (colors: any) => ({
+  color: colors.primary,
   textDecoration: "none",
   fontSize: "14px",
   textAlign: "center" as const,
   marginTop: "10px"
-};
+});
 
-const titleStyle = {
+const getTitleStyle = (colors: any) => ({
   fontSize: "28px",
   fontWeight: "bold",
   textAlign: "center" as const,
   marginBottom: "30px",
-  color: "#333"
-};
+  color: colors.text
+});
 
 export default function Login() {
+  const { colors } = useTheme();
   const navigate = useNavigate();
   const [authForm, setAuthForm] = useState<AuthForm>({
     name: '',
@@ -167,20 +173,25 @@ export default function Login() {
 
   // Dynamic styles based on screen size
   const responsiveCardStyle = {
-    ...cardStyle,
+    ...getCardStyle(colors),
     padding: isMobile ? "15px" : "30px",
     margin: isMobile ? "5px" : "20px"
   };
 
   const responsiveContainerStyle = {
-    ...containerStyle,
+    ...getContainerStyle(colors),
     padding: isMobile ? "5px" : "20px"
   };
 
   return (
     <div style={responsiveContainerStyle}>
+      {/* Theme toggle */}
+      <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100 }}>
+        <ThemeToggle />
+      </div>
+      
       <div style={responsiveCardStyle}>
-        <h1 style={titleStyle}>
+        <h1 style={getTitleStyle(colors)}>
           🍅 Life in Focus
         </h1>
         
@@ -191,7 +202,7 @@ export default function Login() {
         <div style={formStyle}>
           {isSignUp && (
             <input
-              style={inputStyle}
+              style={getInputStyle(colors)}
               placeholder="Full Name"
               type="text"
               value={authForm.name}
@@ -202,7 +213,7 @@ export default function Login() {
           )}
           
           <input
-            style={inputStyle}
+            style={getInputStyle(colors)}
             placeholder="Email"
             type="email"
             value={authForm.email}
@@ -212,7 +223,7 @@ export default function Login() {
           />
           
           <input
-            style={inputStyle}
+            style={getInputStyle(colors)}
             placeholder="Password"
             type="password"
             value={authForm.password}
@@ -222,7 +233,7 @@ export default function Login() {
           />
           
           <button 
-            style={primaryButtonStyle}
+            style={getPrimaryButtonStyle(colors)}
             onClick={isSignUp ? signUp : signIn}
             disabled={isLoading}
           >
@@ -230,14 +241,14 @@ export default function Login() {
           </button>
           
           <button 
-            style={secondaryButtonStyle}
+            style={getSecondaryButtonStyle(colors)}
             onClick={() => setIsSignUp(!isSignUp)}
             type="button"
           >
             {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
           </button>
           
-          <Link to="/" style={linkStyle}>
+          <Link to="/" style={getLinkStyle(colors)}>
             Continue as Guest
           </Link>
         </div>
