@@ -359,7 +359,7 @@ function Timer() {
   }
   
   // Enhanced Web Audio function for natural-sounding tones
-  function playWebAudioTone(frequency: number, duration: number, type: 'work' | 'break' | 'longbreak' = 'work') {
+  function playWebAudioTone(frequency: number, duration: number) {
     if (!audioContext) return;
     
     try {      
@@ -424,7 +424,7 @@ function Timer() {
     
     notes.forEach(note => {
       setTimeout(() => {
-        playWebAudioTone(note.freq, 800, 'longbreak');
+        playWebAudioTone(note.freq, 800);
       }, note.delay);
     });
   }
@@ -532,6 +532,10 @@ function Timer() {
   // Premium/Paywall state
   const [isPremium, setIsPremium] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const tasksPerPage = 4;
 
   // Handle All Time stats access
   const handleAllTimeClick = () => {
@@ -1557,39 +1561,112 @@ const buttonGroup = (
     return { totalTime, taskTimeList, totalPomodoros: completedPomos };
   };
 
+  // Pagination logic
+  const totalPages = Math.ceil(completedTasks.length / tasksPerPage);
+  const startIndex = (currentPage - 1) * tasksPerPage;
+  const endIndex = startIndex + tasksPerPage;
+  const currentTasks = completedTasks.slice(startIndex, endIndex);
+
+  // Reset to first page when switching between tabs
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [showStats]);
+
   const taskList = (
     <div style={getTaskListStyle(colors)}>
-      <div style={{display: "flex", gap: "10px", marginBottom: "15px"}}>
-        <button 
-          style={{
-            ...buttonStyle,
-            backgroundColor: !showStats ? "#007bff" : "transparent",
-            color: !showStats ? "white" : "#666",
-            border: !showStats ? "none" : "1px solid #ddd",
-            padding: "8px 16px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            borderRadius: "8px"
-          }}
-          onClick={() => setShowStats(false)}
-        >
-          Recent Tasks
-        </button>
-        <button 
-          style={{
-            ...buttonStyle,
-            backgroundColor: showStats ? "#007bff" : "transparent",
-            color: showStats ? "white" : "#666", 
-            border: showStats ? "none" : "1px solid #ddd",
-            padding: "8px 16px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            borderRadius: "8px"
-          }}
-          onClick={() => setShowStats(true)}
-        >
-          Stats
-        </button>
+      <div style={{display: "flex", gap: "10px", marginBottom: "15px", alignItems: "center", justifyContent: "space-between"}}>
+        <div style={{display: "flex", gap: "10px"}}>
+          <button 
+            style={{
+              ...buttonStyle,
+              backgroundColor: !showStats ? "#007bff" : "transparent",
+              color: !showStats ? "white" : "#666",
+              border: !showStats ? "none" : "1px solid #ddd",
+              padding: "8px 16px",
+              fontSize: "16px",
+              fontWeight: "bold",
+              borderRadius: "8px"
+            }}
+            onClick={() => setShowStats(false)}
+          >
+            Recent Tasks
+          </button>
+          <button 
+            style={{
+              ...buttonStyle,
+              backgroundColor: showStats ? "#007bff" : "transparent",
+              color: showStats ? "white" : "#666", 
+              border: showStats ? "none" : "1px solid #ddd",
+              padding: "8px 16px",
+              fontSize: "16px",
+              fontWeight: "bold",
+              borderRadius: "8px"
+            }}
+            onClick={() => setShowStats(true)}
+          >
+            Stats
+          </button>
+        </div>
+        
+        {/* Pagination Controls - only show for Recent Tasks with >4 tasks */}
+        {!showStats && totalPages > 1 && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "2px"
+          }}>
+            <button
+              style={{
+                backgroundColor: "transparent",
+                border: currentPage === 1 ? "1px solid #ddd" : "1px solid #ddd",
+                color: currentPage === 1 ? "#ccc" : "#666",
+                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                fontSize: "12px",
+                padding: "4px 6px",
+                borderRadius: "6px 0 0 6px",
+                fontWeight: "bold",
+                transition: "all 0.2s",
+                opacity: currentPage === 1 ? 0.5 : 1,
+                minWidth: "auto"
+              }}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              ←
+            </button>
+            
+            <div style={{
+              backgroundColor: "transparent",
+              color: colors.text,
+              fontSize: "14px",
+              fontWeight: "bold",
+              padding: "4px 8px",
+              minWidth: "auto"
+            }}>
+              {currentPage}
+            </div>
+            
+            <button
+              style={{
+                backgroundColor: "transparent",
+                border: currentPage === totalPages ? "1px solid #ddd" : "1px solid #ddd",
+                color: currentPage === totalPages ? "#ccc" : "#666",
+                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                fontSize: "12px",
+                padding: "4px 6px",
+                borderRadius: "0 6px 6px 0",
+                fontWeight: "bold",
+                transition: "all 0.2s",
+                opacity: currentPage === totalPages ? 0.5 : 1,
+                minWidth: "auto"
+              }}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              →
+            </button>
+          </div>
+        )}
       </div>
       {showStats ? (
         // Stats view - require login
@@ -1739,7 +1816,8 @@ const buttonGroup = (
         // Tasks view
         <div>
           {completedTasks.length > 0 ? (
-            completedTasks.map((task) => (
+            <>
+              {currentTasks.map((task) => (
             <div key={task.id} style={getTaskItemStyle(colors)}>
                 {editingTaskId === task.id ? (
                   <div style={editFormStyle}>
@@ -1798,7 +1876,8 @@ const buttonGroup = (
                   </div>
                 )}
               </div>
-            ))
+              ))}
+            </>
           ) : (
             <div style={{textAlign: "center", color: colors.textSecondary, padding: "20px"}}>
               No tasks yet.
