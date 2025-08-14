@@ -429,6 +429,53 @@ function Timer() {
     });
   }
 
+  // Notification functions
+  function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then(permission => {
+        console.log('Notification permission:', permission);
+      });
+    }
+  }
+
+  function showNotification(title: string, body: string, icon?: string) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(title, {
+          body,
+          icon: icon || '/favicon.ico',
+          badge: '/favicon.ico',
+          tag: 'pomodoro-timer', // Replace previous notifications
+          requireInteraction: false, // Don't require user interaction to dismiss
+          silent: false // Allow notification sound (we already have our custom sounds)
+        });
+      } catch (error) {
+        console.warn('Could not show notification:', error);
+      }
+    }
+  }
+
+  function showWorkCompleteNotification() {
+    showNotification(
+      '🍅 Work Session Complete!',
+      `Great job! You've completed a ${getSessionDuration(SessionType.WORK)/60}-minute work session. Time for a break!`
+    );
+  }
+
+  function showBreakCompleteNotification() {
+    showNotification(
+      '⚡ Break Time Over!',
+      'Your break is finished. Ready to start your next work session?'
+    );
+  }
+
+  function showLongBreakCompleteNotification() {
+    showNotification(
+      '🌟 Long Break Complete!',
+      'You\'ve earned this rest! Ready to start a fresh work session?'
+    );
+  }
+
   function getSessionDuration(type: SessionType): number {
     switch (type) {
       case SessionType.WORK:
@@ -614,8 +661,9 @@ function Timer() {
       }
       
       if (sessionType === SessionType.WORK) {
-        // Play sound when work session ends naturally
+        // Play sound and show notification when work session ends naturally
         playWorkEndSound();
+        showWorkCompleteNotification();
         
         saveWorkSession().then(() => {
           fetchTasks();
@@ -654,11 +702,13 @@ function Timer() {
           return newCount === 4 ? 0 : newCount;
         });
       } else if (sessionType === SessionType.BREAK || sessionType === SessionType.LONG_BREAK) {
-        // Play appropriate sound when break ends naturally
+        // Play appropriate sound and show notification when break ends naturally
         if (sessionType === SessionType.LONG_BREAK) {
           playLongBreakEndSound();
+          showLongBreakCompleteNotification();
         } else {
           playBreakEndSound();
+          showBreakCompleteNotification();
         }
         
         // Break finished, return to work (but don't auto-start)
@@ -813,6 +863,9 @@ React.useEffect(() => {
     
     // Initialize audio on first user interaction
     initializeAudio();
+    
+    // Request notification permission on first timer start
+    requestNotificationPermission();
     
     // Clear existing timer
     if (timerRef.current) {
