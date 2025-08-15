@@ -53,8 +53,8 @@ const getContainerStyle = (colors: any) => ({
   display: "flex", 
   flexDirection: "column" as const, 
   minHeight: "100vh",
-  padding: "10px",
-  gap: "20px",
+  padding: "6px",
+  gap: "10px",
   backgroundColor: colors.background
 });
 
@@ -92,6 +92,17 @@ const getRightColumnStyle = (colors: any) => ({
   minHeight: "150px"  // Let content determine height
 });
 
+const getMobileRightColumnStyle = (colors: any) => ({ 
+  display: "flex", 
+  flexDirection: "column" as const, 
+  alignItems: "center",
+  backgroundColor: colors.surface,
+  borderRadius: "10px",
+  padding: "10px",
+  boxShadow: `0 2px 8px ${colors.shadow}`,
+  minHeight: "100px"  // Smaller for mobile
+});
+
 const getTaskListStyle = (colors: any) => ({ 
   display: "flex", 
   flexDirection: "column" as const, 
@@ -103,6 +114,19 @@ const getTaskListStyle = (colors: any) => ({
   borderRadius: "12px",
   padding: "15px",
   boxShadow: `0 2px 10px ${colors.shadow}`
+});
+
+const getMobileTaskListStyle = (colors: any) => ({ 
+  display: "flex", 
+  flexDirection: "column" as const, 
+  alignItems: "stretch", 
+  gap: "6px", 
+  maxHeight: "260px",
+  overflowY: "auto" as const,
+  backgroundColor: colors.surface,
+  borderRadius: "10px",
+  padding: "10px",
+  boxShadow: `0 2px 8px ${colors.shadow}`
 });
 
 const getTaskItemStyle = (colors: any) => ({ 
@@ -218,6 +242,14 @@ const getTimerDisplayStyle = (colors: any) => ({
   margin: "15px 0"
 });
 
+const getMobileTimerDisplayStyle = (colors: any) => ({
+  fontSize: "clamp(1.6rem, 6vw, 3rem)",
+  fontWeight: "bold",
+  color: colors.text,
+  textAlign: "center" as const,
+  margin: "10px 0"
+});
+
 const getSessionHeaderStyle = (colors: any) => ({
   fontSize: "clamp(1.1rem, 3.5vw, 1.6rem)",
   fontWeight: "bold",
@@ -226,11 +258,27 @@ const getSessionHeaderStyle = (colors: any) => ({
   margin: "6px 0"
 });
 
+const getMobileSessionHeaderStyle = (colors: any) => ({
+  fontSize: "clamp(1rem, 3vw, 1.4rem)",
+  fontWeight: "bold",
+  textAlign: "center" as const,
+  color: colors.text,
+  margin: "4px 0"
+});
+
 const getActiveTaskStyle = (colors: any) => ({
   fontSize: "clamp(1rem, 3vw, 1.2rem)",
   textAlign: "center" as const,
   color: colors.textSecondary,
   margin: "10px 0",
+  wordBreak: "break-word" as const
+});
+
+const getMobileActiveTaskStyle = (colors: any) => ({
+  fontSize: "clamp(0.9rem, 2.8vw, 1.1rem)",
+  textAlign: "center" as const,
+  color: colors.textSecondary,
+  margin: "6px 0",
   wordBreak: "break-word" as const
 });
 
@@ -1574,7 +1622,7 @@ const buttonGroup = (
   }, [showStats]);
 
   const taskList = (
-    <div style={getTaskListStyle(colors)}>
+    <div style={isMobile ? getMobileTaskListStyle(colors) : getTaskListStyle(colors)}>
       <div style={{display: "flex", gap: "10px", marginBottom: "15px", alignItems: "center", justifyContent: "space-between"}}>
         <div style={{display: "flex", gap: "10px"}}>
           <button 
@@ -2010,7 +2058,7 @@ const buttonGroup = (
 
 // Auth section removed - now using routing
 const timerSection = (
-  <div style={getRightColumnStyle(colors)}>
+  <div style={isMobile ? getMobileRightColumnStyle(colors) : getRightColumnStyle(colors)}>
     {/* Welcome message and logout link above session header (only when logged in) */}
     {user && (
       <div style={{
