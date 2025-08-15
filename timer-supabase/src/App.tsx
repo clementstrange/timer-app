@@ -2134,7 +2134,7 @@ if (isMobile) {
   return (
     <div style={getContainerStyle(colors)}>
       {/* Theme toggle for mobile */}
-      <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 100 }}>
+      <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 100 }}>
         <ThemeToggle />
       </div>
       {timerSection}
