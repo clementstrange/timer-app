@@ -68,6 +68,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
   }, []);
 
+  // Update data-theme attribute when theme changes
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);

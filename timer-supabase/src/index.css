@@ -24,41 +24,50 @@ input:focus, button:focus {
   outline-offset: 2px;
 }
 
-/* Force all input text to be white in all cases */
+/* Define CSS variables for theme colors */
+:root {
+  --input-text-color: #333333; /* Light mode default */
+}
+
+[data-theme="dark"] {
+  --input-text-color: #ffffff; /* Dark mode */
+}
+
+/* Input text color that respects theme */
 input {
-  color: white !important;
-  -webkit-text-fill-color: white !important;
+  color: var(--input-text-color) !important;
+  -webkit-text-fill-color: var(--input-text-color) !important;
   -webkit-box-shadow: none !important;
 }
 
-/* Force all placeholder text to be white */
+/* Placeholder text respecting theme */
 input::placeholder {
-  color: white !important;
+  color: var(--input-text-color) !important;
   opacity: 0.8 !important;
 }
 
 input::-webkit-input-placeholder {
-  color: white !important;
+  color: var(--input-text-color) !important;
   opacity: 0.8 !important;
 }
 
 input::-moz-placeholder {
-  color: white !important;
+  color: var(--input-text-color) !important;
   opacity: 0.8 !important;
 }
 
 input:-ms-input-placeholder {
-  color: white !important;
+  color: var(--input-text-color) !important;
   opacity: 0.8 !important;
 }
 
-/* Override autofill styling */
+/* Override autofill styling with theme-aware color */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: none !important;
-  -webkit-text-fill-color: white !important;
-  color: white !important;
+  -webkit-text-fill-color: var(--input-text-color) !important;
+  color: var(--input-text-color) !important;
   transition: background-color 5000s ease-in-out 0s;
 }

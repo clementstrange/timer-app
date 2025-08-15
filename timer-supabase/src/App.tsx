@@ -63,9 +63,10 @@ const getWebContainerStyle = (colors: any) => ({
   flexDirection: "column" as const,
   minHeight: "100vh",
   backgroundColor: colors.background,
-  padding: "20px",
+  padding: "15px",
   alignItems: "center",
-  justifyContent: "center"
+  justifyContent: "flex-start",
+  paddingTop: "40px"
 });
 
 const getWebFrameStyle = (colors: any) => ({
@@ -73,9 +74,9 @@ const getWebFrameStyle = (colors: any) => ({
   flexDirection: "column" as const,
   maxWidth: "600px",
   width: "100%",
-  gap: "20px",
+  gap: "15px",
   backgroundColor: colors.surface,
-  padding: "20px",
+  padding: "15px",
   borderRadius: "16px",
   boxShadow: `0 4px 20px ${colors.shadow}`
 });
@@ -86,33 +87,33 @@ const getRightColumnStyle = (colors: any) => ({
   alignItems: "center",
   backgroundColor: colors.surface,
   borderRadius: "12px",
-  padding: "20px",
+  padding: "15px",
   boxShadow: `0 2px 10px ${colors.shadow}`,
-  minHeight: "200px"  // Let content determine height
+  minHeight: "150px"  // Let content determine height
 });
 
 const getTaskListStyle = (colors: any) => ({ 
   display: "flex", 
   flexDirection: "column" as const, 
   alignItems: "stretch", 
-  gap: "12px", 
-  maxHeight: "400px",
+  gap: "8px", 
+  maxHeight: "340px",
   overflowY: "auto" as const,
   backgroundColor: colors.surface,
   borderRadius: "12px",
-  padding: "20px",
+  padding: "15px",
   boxShadow: `0 2px 10px ${colors.shadow}`
 });
 
 const getTaskItemStyle = (colors: any) => ({ 
   display: "flex", 
   flexDirection: "column" as const,
-  gap: "8px",
-  padding: "12px",
+  gap: "6px",
+  padding: "8px",
   backgroundColor: colors.background,
-  borderRadius: "8px",
+  borderRadius: "6px",
   border: `1px solid ${colors.border}`,
-  marginBottom: "13px"
+  marginBottom: "8px"
 });
 
 const taskItemContentStyle = {
@@ -131,10 +132,10 @@ const taskButtonsStyle = {
 
 const buttonGroupStyle = { 
   display: "flex", 
-  gap: "10px", 
+  gap: "8px", 
   justifyContent: "center",
   flexWrap: "wrap" as const,
-  marginTop: "10px"
+  marginTop: "8px"
 };
 
 const getInputStyle = (colors: any) => ({
@@ -153,11 +154,11 @@ const getInputStyle = (colors: any) => ({
 
 const compactRowStyle = {
   display: "flex",
-  gap: "10px",
+  gap: "8px",
   alignItems: "center",
   justifyContent: "center",
   width: "100%",
-  marginTop: "11px"
+  marginTop: "8px"
 };
 
 const getTaskInputStyle = (colors: any) => ({
@@ -210,19 +211,19 @@ const getSuccessButtonStyle = (colors: any) => ({
 });
 
 const getTimerDisplayStyle = (colors: any) => ({
-  fontSize: "clamp(2rem, 8vw, 4rem)",
+  fontSize: "clamp(1.8rem, 7vw, 3.5rem)",
   fontWeight: "bold",
   color: colors.text,
   textAlign: "center" as const,
-  margin: "20px 0"
+  margin: "15px 0"
 });
 
 const getSessionHeaderStyle = (colors: any) => ({
-  fontSize: "clamp(1.2rem, 4vw, 1.8rem)",
+  fontSize: "clamp(1.1rem, 3.5vw, 1.6rem)",
   fontWeight: "bold",
   textAlign: "center" as const,
   color: colors.text,
-  margin: "9px 0"
+  margin: "6px 0"
 });
 
 const getActiveTaskStyle = (colors: any) => ({
@@ -1673,30 +1674,30 @@ const buttonGroup = (
         !user ? (
           <div style={{
             textAlign: "center" as const,
-            padding: "40px 20px",
+            padding: "20px",
             color: "#666"
           }}>
-            <div style={{fontSize: "48px", marginBottom: "20px"}}>📊</div>
-            <h3 style={{
-              fontSize: "20px",
+            <div style={{
+              fontSize: "16px",
               fontWeight: "bold",
-              marginBottom: "12px",
+              marginBottom: "8px",
               color: colors.text
             }}>
-              Please Log In to View Stats
-            </h3>
+              Log in to view stats
+            </div>
             <p style={{
-              fontSize: "16px",
-              marginBottom: "24px",
-              lineHeight: "1.5"
+              fontSize: "14px",
+              marginBottom: "16px",
+              lineHeight: "1.4",
+              color: colors.textSecondary
             }}>
-              Create an account to track your productivity statistics and see detailed insights about your work sessions.
+              Track your productivity statistics and see detailed insights about your work.
             </p>
             <Link to="/login" style={{textDecoration: 'none'}}>
               <button style={{
                 ...getPrimaryButtonStyle(colors),
-                padding: "12px 24px",
-                fontSize: "16px"
+                padding: "8px 16px",
+                fontSize: "14px"
               }}>
                 Log In / Sign Up
               </button>
@@ -2053,7 +2054,7 @@ const timerSection = (
         fontSize: "12px",
         color: colors.textSecondary,
         textAlign: "center" as const,
-        margin: "5px 0 20px 0",
+        margin: "3px 0 12px 0",
         opacity: 0.7
       }}>
         {timerState === "stopped" ? (
