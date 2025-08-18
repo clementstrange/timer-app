@@ -586,6 +586,9 @@ function Timer() {
   const [currentPage, setCurrentPage] = useState(1);
   const tasksPerPage = 4;
 
+  // Online/Offline state
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
   // Handle All Time stats access
   const handleAllTimeClick = () => {
     if (isPremium) {
@@ -661,6 +664,27 @@ function Timer() {
 
   return () => subscription.unsubscribe();
 }, []);
+
+  // Online/Offline detection useEffect
+  React.useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Sync any pending tasks when connection is restored
+      syncPendingTasks();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   
   // Add this useEffect to show timer in title (debounced)
   React.useEffect(() => {
@@ -1028,34 +1052,49 @@ React.useEffect(() => {
 
   if (taskName && hasStartedRef.current && timeWorked > 0) {
     if (user) {
-
-
-  
-  const { error } = await supabase
-    .from('tasks')
-    .insert([
-      {
-        task_name: taskName,
-        time_worked: timeWorked,
-        user_id: user.id
+      // Check if online before attempting Supabase save
+      if (isOnline) {
+        // Try to save to Supabase when online
+        const { error } = await supabase
+          .from('tasks')
+          .insert([
+            {
+              task_name: taskName,
+              time_worked: timeWorked,
+              user_id: user.id
+            }
+          ]);
+        
+        if (error) {
+          console.error('Error saving task to Supabase:', error);
+          // Save to localStorage with sync_pending flag if Supabase fails
+          const existingTasks = JSON.parse(localStorage.getItem('failed_tasks') || '[]');
+          const failedTask = { 
+            id: Date.now(),
+            task_name: taskName, 
+            time_worked: timeWorked,
+            created_at: new Date().toISOString(),
+            user_id: user.id,
+            sync_pending: true
+          };
+          existingTasks.push(failedTask);
+          localStorage.setItem('failed_tasks', JSON.stringify(existingTasks));
+        }
+      } else {
+        // Save directly to localStorage when offline (logged-in user)
+        console.log('Offline: saving task to localStorage for later sync');
+        const existingTasks = JSON.parse(localStorage.getItem('failed_tasks') || '[]');
+        const offlineTask = { 
+          id: Date.now(),
+          task_name: taskName, 
+          time_worked: timeWorked,
+          created_at: new Date().toISOString(),
+          user_id: user.id,
+          sync_pending: true
+        };
+        existingTasks.push(offlineTask);
+        localStorage.setItem('failed_tasks', JSON.stringify(existingTasks));
       }
-    ]);
-  
-  if (error) {
-    console.error('Error saving task:', error);
-    // Fallback to localStorage if Supabase fails
-    const existingTasks = JSON.parse(localStorage.getItem('failed_tasks') || '[]');
-    const failedTask = { 
-      id: Date.now(),
-      task_name: taskName, 
-      time_worked: timeWorked,
-      created_at: new Date().toISOString(),
-      user_id: user.id,
-      sync_pending: true
-    };
-    existingTasks.push(failedTask);
-    localStorage.setItem('failed_tasks', JSON.stringify(existingTasks));
-  }
 } else {
 
 
@@ -1286,6 +1325,43 @@ async function migrateLocalStorageToSupabase(currentUser: User): Promise<boolean
     return false;
   }
 }
+
+  // Sync pending tasks when connection is restored
+  async function syncPendingTasks() {
+    if (!user) return; // Only sync for logged-in users
+    
+    try {
+      const pendingTasksString = localStorage.getItem('failed_tasks');
+      if (!pendingTasksString) return; // No pending tasks to sync
+      
+      const pendingTasks: Task[] = JSON.parse(pendingTasksString);
+      if (pendingTasks.length === 0) return;
+      
+      console.log(`Syncing ${pendingTasks.length} pending tasks to Supabase...`);
+      
+      const tasksToSync = pendingTasks.map((task: Task) => ({
+        task_name: task.task_name,
+        time_worked: task.time_worked,
+        user_id: task.user_id || user.id,
+        created_at: task.created_at || new Date().toISOString()
+      }));
+      
+      const { error } = await supabase
+        .from('tasks')
+        .insert(tasksToSync);
+      
+      if (!error) {
+        localStorage.removeItem('failed_tasks');
+        console.log('✅ Sync successful! Pending tasks uploaded to Supabase.');
+        fetchTasks(); // Refresh the task list
+      } else {
+        console.error('❌ Sync failed:', error);
+      }
+    } catch (error) {
+      console.error('❌ Sync error:', error);
+    }
+  }
+
   // Get session type color
   function getSessionColor(): string {
     switch (sessionType) {
@@ -2185,6 +2261,28 @@ if (isMobile) {
       <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 100 }}>
         <ThemeToggle />
       </div>
+      
+      {/* Offline indicator for mobile */}
+      {!isOnline && (
+        <div style={{ 
+          position: 'fixed', 
+          top: '20px', 
+          left: '20px', 
+          background: '#ff6b6b', 
+          color: 'white', 
+          padding: '8px 12px', 
+          borderRadius: '20px', 
+          fontSize: '12px',
+          fontWeight: 'bold',
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}>
+          <div style={{ width: '8px', height: '8px', backgroundColor: 'white', borderRadius: '50%' }}></div>
+          Offline
+        </div>
+      )}
       {timerSection}
       {taskList}
       {paywallModal}
@@ -2199,6 +2297,28 @@ return (
     <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100 }}>
       <ThemeToggle />
     </div>
+    
+    {/* Offline indicator for desktop */}
+    {!isOnline && (
+      <div style={{ 
+        position: 'absolute', 
+        top: '20px', 
+        left: '20px', 
+        background: '#ff6b6b', 
+        color: 'white', 
+        padding: '8px 12px', 
+        borderRadius: '20px', 
+        fontSize: '12px',
+        fontWeight: 'bold',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px'
+      }}>
+        <div style={{ width: '8px', height: '8px', backgroundColor: 'white', borderRadius: '50%' }}></div>
+        Offline
+      </div>
+    )}
     <div style={getWebFrameStyle(colors)}>
       {timerSection}
       {taskList}
