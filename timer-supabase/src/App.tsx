@@ -1119,29 +1119,53 @@ React.useEffect(() => {
 }
   async function fetchTasks() {
     if (user) {
+      let supabaseTasks: Task[] = [];
+      let pendingTasks: Task[] = [];
+      
+      // Load pending tasks from localStorage (offline tasks)
       try {
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('Error fetching tasks:', error);
-          // Try to load from localStorage as fallback
-          try {
-            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-            setCompletedTasks(tasks);
-          } catch (localError) {
-            console.error('Error loading from localStorage:', localError);
-            setCompletedTasks([]);
-          }
-        } else {
-          setCompletedTasks(data || []);
+        const pendingTasksString = localStorage.getItem('failed_tasks');
+        if (pendingTasksString) {
+          pendingTasks = JSON.parse(pendingTasksString);
         }
-      } catch (networkError) {
-        console.error('Network error fetching tasks:', networkError);
-        setCompletedTasks([]);
+      } catch (error) {
+        console.error('Error loading pending tasks:', error);
       }
+      
+      // Try to load from Supabase if online
+      if (isOnline) {
+        try {
+          const { data, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .order('created_at', { ascending: false });
+          
+          if (error) {
+            console.error('Error fetching tasks from Supabase:', error);
+          } else {
+            supabaseTasks = data || [];
+          }
+        } catch (networkError) {
+          console.error('Network error fetching tasks:', networkError);
+        }
+      }
+      
+      // Combine Supabase tasks with pending local tasks
+      const allTasks = [...supabaseTasks, ...pendingTasks].sort((a: Task, b: Task) => {
+        const getTimestamp = (task: Task): number => {
+          if (task.created_at) {
+            const date = new Date(task.created_at);
+            return isNaN(date.getTime()) ? task.id || 0 : date.getTime();
+          }
+          return task.id || 0;
+        };
+        
+        const dateA = getTimestamp(a);
+        const dateB = getTimestamp(b);
+        return dateB - dateA;
+      });
+      
+      setCompletedTasks(allTasks);
     } else {
       try {
         const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
