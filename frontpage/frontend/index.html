@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmonic Heights</title>
+    <style>
+        body {
+            font-family: monospace;
+            background-color: white;
+            color: black;
+            padding: 20px;
+            font-size: 1.2em;
+        }
+
+        .company-name {
+            font-size: 8px;
+            line-height: 1;
+            margin-bottom: 30px;
+            white-space: pre;
+        }
+
+        .nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: black;
+        }
+
+        .dropdown {
+            display: none;
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+
+        .nav-item:hover .dropdown {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: block;
+            text-decoration: none;
+            color: black;
+            margin-bottom: 3px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="company-name">
+██   ██  █████  ██████  ███    ███  ██████  ███    ██ ██  ██████ 
+██   ██ ██   ██ ██   ██ ████  ████ ██    ██ ████   ██ ██ ██      
+███████ ███████ ██████  ██ ████ ██ ██    ██ ██ ██  ██ ██ ██      
+██   ██ ██   ██ ██   ██ ██  ██  ██ ██    ██ ██  ██ ██ ██ ██      
+██   ██ ██   ██ ██   ██ ██      ██  ██████  ██   ████ ██  ██████ 
+
+██   ██ ███████ ██  ██████  ██   ██ ████████ ███████ 
+██   ██ ██      ██ ██       ██   ██    ██    ██      
+███████ █████   ██ ██   ███ ███████    ██    ███████ 
+██   ██ ██      ██ ██    ██ ██   ██    ██         ██ 
+██   ██ ███████ ██  ██████  ██   ██    ██    ███████ 
+    </div>
+
+    <nav>
+        <ul class="nav">
+            <li class="nav-item">
+                <a href="#" class="nav-link">About</a>
+                <div class="dropdown">
+                    <span class="dropdown-item">We build small productivity apps.</span>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Portfolio</a>
+                <div class="dropdown">
+                    <a href="https://timer-app-q7nv.vercel.app" class="dropdown-item" target="_blank">Pomodoro Timer</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Contact us</a>
+                <div class="dropdown">
+                    <span class="dropdown-item">hi@harmonic.io</span>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Contact form commented out - can be re-enabled later
+    <div id="contactForm" style="display: none; margin-top: 30px;">
+        <form onsubmit="sendMessage(event)">
+            <div style="margin-bottom: 10px;">
+                <input type="text" id="name" placeholder="Name" required style="width: 300px; padding: 8px; font-family: monospace;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <input type="email" id="email" placeholder="Email" required style="width: 300px; padding: 8px; font-family: monospace;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <textarea id="message" placeholder="Message" required style="width: 300px; height: 120px; padding: 8px; font-family: monospace; resize: none;"></textarea>
+            </div>
+            <button type="submit" style="padding: 8px 20px; font-family: monospace; background: white; border: 1px solid black;">Send</button>
+        </form>
+        <div id="messageStatus" style="margin-top: 10px; display: none;"></div>
+    </div>
+    -->
+
+
+    <!-- Contact form JavaScript commented out - can be re-enabled later
+    <script>
+        function showContactForm() {
+            const form = document.getElementById('contactForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            
+            // Send email via backend
+            fetch('/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('messageStatus').innerHTML = data.message;
+                    document.getElementById('messageStatus').style.display = 'block';
+                    
+                    // Clear form
+                    document.getElementById('name').value = '';
+                    document.getElementById('email').value = '';
+                    document.getElementById('message').value = '';
+                    
+                    // Hide form after 3 seconds
+                    setTimeout(() => {
+                        document.getElementById('contactForm').style.display = 'none';
+                        document.getElementById('messageStatus').style.display = 'none';
+                    }, 3000);
+                } else {
+                    document.getElementById('messageStatus').innerHTML = 'Failed to send message. Please try again.';
+                    document.getElementById('messageStatus').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('messageStatus').innerHTML = 'Failed to send message. Please try again.';
+                document.getElementById('messageStatus').style.display = 'block';
+            });
+        }
+    </script>
+    -->
+</body>
+</html>
